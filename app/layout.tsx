@@ -12,6 +12,11 @@ export const metadata: Metadata = {
   description: "Brampton Beit Midrash (BBM) - A dedicated place for Torah learning and spiritual growth. Join us for daily davening, shiurim, and community learning in Brampton.",
   keywords: ["Brampton Beit Midrash", "BBM", "Torah learning", "Shiurim", "Jewish community", "Brampton", "Beit Midrash"],
   authors: [{ name: "Brampton Beit Midrash" }],
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+  },
   openGraph: {
     title: "Brampton Beit Midrash | BBM",
     description: "A Place to Learn - Join us for daily Torah learning and davening",
