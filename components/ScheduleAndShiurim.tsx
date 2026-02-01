@@ -55,10 +55,10 @@ export default function ScheduleAndShiurim() {
           </div>
         </div>
 
-        {/* Morning Shiurim */}
+        {/* Morning Seder */}
         <div className="mb-12">
           <h3 className="text-2xl md:text-3xl font-bold text-primary mb-6 text-center">
-            Morning Shiurim
+            Morning Seder
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {morningShiurim.map((shiur) => (
@@ -67,10 +67,10 @@ export default function ScheduleAndShiurim() {
           </div>
         </div>
 
-        {/* Night Shiurim */}
+        {/* Night Seder */}
         <div className="mb-12">
           <h3 className="text-2xl md:text-3xl font-bold text-primary mb-6 text-center">
-            Night Shiurim
+            Night Seder
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {nightShiurim.map((shiur) => (
@@ -79,10 +79,10 @@ export default function ScheduleAndShiurim() {
           </div>
         </div>
 
-        {/* Special Weekly Shiurim */}
+        {/* Vaadim */}
         <div className="mb-12">
           <h3 className="text-2xl md:text-3xl font-bold text-primary mb-6 text-center">
-            Special Weekly Shiurim
+            Vaadim
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {specialWeekly.map((shiur) => (

@@ -17,16 +17,24 @@ export const shiurim: Shiur[] = [
     time: '6:45-8:00 AM',
   },
   
+  
   // Morning Shiurim
   {
     id: 'pesachim-biyun-morning',
     title: 'Pesachim',
     titleHebrew: 'מסכת פסחים פרק א׳ בעיון',
     rabbi: 'Rabbi Kahlani',
-    time: '7:45 - 9:45 PM',
+    time: '9:30-11:30 AM',
   },
   
   // Night Shiurim
+  {
+    id: 'pesachim-biyun-night',
+    title: 'Pesachim',
+    titleHebrew: 'מסכת פסחים פרק א׳ בעיון',
+    rabbi: 'Rabbi Kahlani',
+    time: '7:45 PM - 9:45 PM',
+  },
   {
     id: 'brachot-bekiut-night',
     title: 'Brachot',

@@ -39,19 +39,19 @@ export default function Navbar() {
               Shiurim
             </Link>
             <Link
-              href="#schedule"
+              href="/#schedule"
               className="text-foreground hover:text-primary transition-colors font-medium"
             >
               Schedule
             </Link>
             <Link
-              href="#rabbis"
+              href="/#rabbis"
               className="text-foreground hover:text-primary transition-colors font-medium"
             >
               Rabbanim
             </Link>
             <Link
-              href="#contact"
+              href="/#contact"
               className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors font-medium"
             >
               Contact
@@ -101,21 +101,21 @@ export default function Navbar() {
                 Shiurim
               </Link>
               <Link
-                href="#schedule"
+                href="/#schedule"
                 onClick={() => setIsMenuOpen(false)}
                 className="text-foreground hover:text-primary transition-colors font-medium py-2"
               >
                 Schedule
               </Link>
               <Link
-                href="#rabbis"
+                href="/#rabbis"
                 onClick={() => setIsMenuOpen(false)}
                 className="text-foreground hover:text-primary transition-colors font-medium py-2"
               >
                 Rabbanim
               </Link>
               <Link
-                href="#contact"
+                href="/#contact"
                 onClick={() => setIsMenuOpen(false)}
                 className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-dark transition-colors font-medium text-center"
               >
