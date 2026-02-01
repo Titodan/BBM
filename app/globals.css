@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/* Taamey David CLM Font for Hebrew */
+@font-face {
+  font-family: 'Taamey David CLM';
+  src: url('/fonts/TaameyDavidCLM.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  
+  /* BBM Brand Colors */
+  --color-primary: #1a3d4f; /* Deep teal/dark blue from logo */
+  --color-secondary: #4a90e2; /* Bright blue */
+  --color-accent: #3dd8a7; /* Mint green accent */
+  --color-light: #f8fafb;
+  --color-dark: #0f2027;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  
+  /* Brand colors */
+  --color-primary: #1a3d4f;
+  --color-primary-dark: #0f2027;
+  --color-secondary: #4a90e2;
+  --color-accent: #3dd8a7;
+  --color-light: #f8fafb;
+  
+  /* Typography */
+  --font-sans: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-hebrew: 'Taamey David CLM', 'Frank Ruehl CLM', serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/* Hebrew text styling */
+.hebrew {
+  font-family: var(--font-hebrew);
+  direction: rtl;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
