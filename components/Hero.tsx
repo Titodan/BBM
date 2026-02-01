@@ -54,7 +54,7 @@ export default function Hero() {
         </div>
 
         {/* Call-to-Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
           <Link
             href="#schedule"
             className="bg-accent text-primary-dark px-8 py-4 rounded-lg font-bold text-lg hover:bg-accent/90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 w-full sm:w-auto"
@@ -63,7 +63,7 @@ export default function Hero() {
           </Link>
           <Link
             href="#rabbis"
-            className="bg-white/10 backdrop-blur-sm text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white/20 transition-all duration-300 border-2 border-white/30 w-full sm:w-auto"
+            className="bg-white text-primary px-8 py-4 rounded-lg font-bold text-lg hover:bg-white/90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 w-full sm:w-auto border-2 border-white"
           >
             Meet Our Rabbis
           </Link>

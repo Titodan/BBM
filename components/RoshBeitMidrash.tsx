@@ -21,13 +21,13 @@ export default function RoshBeitMidrash() {
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-0">
             {/* Photo Section */}
             <div className="lg:col-span-2 bg-gradient-to-br from-secondary/10 to-accent/10 flex items-center justify-center p-8 lg:p-12">
-              <div className="relative w-64 h-64 lg:w-72 lg:h-72 rounded-2xl overflow-hidden shadow-xl bg-primary/20 flex items-center justify-center">
+              <div className="relative w-full max-w-sm aspect-square rounded-2xl overflow-hidden shadow-xl bg-primary/20 flex items-center justify-center">
                 {roshBeitMidrash.photo ? (
                   <Image
                     src={roshBeitMidrash.photo}
                     alt={roshBeitMidrash.name}
                     fill
-                    className="object-cover"
+                    className="object-contain"
                   />
                 ) : (
                   <div className="text-center">

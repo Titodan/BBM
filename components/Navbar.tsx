@@ -28,25 +28,25 @@ export default function Navbar() {
           <div className="hidden md:flex items-center space-x-8">
             <Link
               href="/"
-              className="text-foreground hover:text-primary transition-colors font-medium"
+              className="text-primary hover:text-secondary transition-colors font-medium"
             >
               Home
             </Link>
             <Link
               href="/shiurim"
-              className="text-foreground hover:text-primary transition-colors font-medium"
+              className="text-primary hover:text-secondary transition-colors font-medium"
             >
               Shiurim
             </Link>
             <Link
               href="/#schedule"
-              className="text-foreground hover:text-primary transition-colors font-medium"
+              className="text-primary hover:text-secondary transition-colors font-medium"
             >
               Schedule
             </Link>
             <Link
               href="/#rabbis"
-              className="text-foreground hover:text-primary transition-colors font-medium"
+              className="text-primary hover:text-secondary transition-colors font-medium"
             >
               Rabbanim
             </Link>
@@ -89,28 +89,28 @@ export default function Navbar() {
               <Link
                 href="/"
                 onClick={() => setIsMenuOpen(false)}
-                className="text-foreground hover:text-primary transition-colors font-medium py-2"
+                className="text-primary hover:text-secondary transition-colors font-medium py-2"
               >
                 Home
               </Link>
               <Link
                 href="/shiurim"
                 onClick={() => setIsMenuOpen(false)}
-                className="text-foreground hover:text-primary transition-colors font-medium py-2"
+                className="text-primary hover:text-secondary transition-colors font-medium py-2"
               >
                 Shiurim
               </Link>
               <Link
                 href="/#schedule"
                 onClick={() => setIsMenuOpen(false)}
-                className="text-foreground hover:text-primary transition-colors font-medium py-2"
+                className="text-primary hover:text-secondary transition-colors font-medium py-2"
               >
                 Schedule
               </Link>
               <Link
                 href="/#rabbis"
                 onClick={() => setIsMenuOpen(false)}
-                className="text-foreground hover:text-primary transition-colors font-medium py-2"
+                className="text-primary hover:text-secondary transition-colors font-medium py-2"
               >
                 Rabbanim
               </Link>
