@@ -8,7 +8,9 @@ import Footer from '@/components/Footer';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary via-primary-dark to-secondary">
+    <div className="min-h-screen" style={{
+      background: 'linear-gradient(to bottom right, #1a3d4f, #0f2027, #4a90e2)'
+    }}>
       <Navbar />
       <main>
         <Hero />

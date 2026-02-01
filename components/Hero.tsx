@@ -3,7 +3,9 @@ import { statistics } from '@/data/rabbis';
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-primary via-primary-dark to-secondary">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden" style={{
+      background: 'linear-gradient(to bottom right, #1a3d4f, #0f2027, #4a90e2)'
+    }}>
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{

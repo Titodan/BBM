@@ -49,15 +49,16 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   min-height: 100vh;
+  background: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: transparent;
 }
 
 /* Hebrew text styling */
 .hebrew {
   font-family: var(--font-hebrew);
   direction: rtl;
-}
-
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
 }
