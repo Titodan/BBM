@@ -27,7 +27,7 @@ export default function Newsletter() {
   };
 
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-br from-secondary to-primary">
+    <section className="py-16 md:py-24">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         {/* Icon */}
         <div className="mb-6">

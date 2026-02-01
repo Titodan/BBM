@@ -3,9 +3,8 @@ import { shiurim } from '@/data/shiurim';
 
 export default function ScheduleAndShiurim() {
   // Group shiurim by time period
-  const earlyMorning = shiurim.filter(s => s.id.includes('chabura'));
   const morningShiurim = shiurim.filter(s => 
-    s.time.includes('AM') && !s.id.includes('chabura') && !s.isSpecial
+    s.time.includes('AM') && !s.isSpecial
   );
   const nightShiurim = shiurim.filter(s => 
     s.time.includes('PM') && !s.isSpecial
@@ -13,7 +12,7 @@ export default function ScheduleAndShiurim() {
   const specialWeekly = shiurim.filter(s => s.isSpecial);
 
   return (
-    <section id="schedule" className="py-16 md:py-24 bg-light">
+    <section id="schedule" className="py-16 md:py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-12 md:mb-16">
@@ -34,10 +33,10 @@ export default function ScheduleAndShiurim() {
             {daveningTimes.map((davening) => (
               <div
                 key={davening.id}
-                className="bg-white rounded-xl shadow-lg p-6 md:p-8 border-2 border-secondary/20 hover:border-secondary transition-all duration-300"
+                className="bg-primary rounded-xl shadow-lg p-6 md:p-8 border-2 border-accent/30 hover:border-accent transition-all duration-300"
               >
                 <div className="text-center">
-                  <h4 className="text-xl md:text-2xl font-bold text-primary mb-2">
+                  <h4 className="text-xl md:text-2xl font-bold text-white mb-2">
                     {davening.name}
                   </h4>
                   <p className="text-lg md:text-xl font-semibold text-accent hebrew mb-3">
@@ -45,25 +44,13 @@ export default function ScheduleAndShiurim() {
                   </p>
                   <div className="space-y-1">
                     {davening.times.map((time, idx) => (
-                      <p key={idx} className="text-lg md:text-xl font-bold text-secondary">
+                      <p key={idx} className="text-lg md:text-xl font-bold text-accent">
                         {time}
                       </p>
                     ))}
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Early Morning Chabura */}
-        <div className="mb-12">
-          <h3 className="text-2xl md:text-3xl font-bold text-primary mb-6 text-center">
-            Early Morning Chabura (2 Tracks)
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 max-w-4xl mx-auto">
-            {earlyMorning.map((shiur) => (
-              <ShiurCard key={shiur.id} shiur={shiur} />
             ))}
           </div>
         </div>
@@ -111,18 +98,18 @@ export default function ScheduleAndShiurim() {
 function ShiurCard({ shiur, special = false }: { shiur: any; special?: boolean }) {
   return (
     <div
-      className={`bg-white rounded-xl shadow-md p-5 md:p-6 border-l-4 hover:shadow-xl transition-all duration-300 ${
-        special ? 'border-accent' : 'border-secondary'
+      className={`bg-primary rounded-xl shadow-md p-5 md:p-6 border-l-4 hover:shadow-xl transition-all duration-300 ${
+        special ? 'border-accent' : 'border-accent'
       }`}
     >
       {/* Title */}
       <div className="mb-3">
         <div className="flex items-start justify-between gap-2 mb-1">
-          <h4 className="text-lg md:text-xl font-bold text-primary flex-1">
+          <h4 className="text-lg md:text-xl font-bold text-white flex-1">
             {shiur.title}
           </h4>
           {shiur.isNew && (
-            <span className="bg-accent text-white text-xs font-bold px-2 py-1 rounded-full">
+            <span className="bg-accent text-primary-dark text-xs font-bold px-2 py-1 rounded-full">
               NEW
             </span>
           )}
@@ -135,34 +122,34 @@ function ShiurCard({ shiur, special = false }: { shiur: any; special?: boolean }
       </div>
 
       {/* Rabbi */}
-      <p className="text-sm md:text-base font-semibold text-secondary mb-2">
+      <p className="text-sm md:text-base font-semibold text-accent/90 mb-2">
         {shiur.rabbi}
       </p>
 
       {/* Time */}
-      <p className="text-base md:text-lg font-bold text-foreground mb-2">
+      <p className="text-base md:text-lg font-bold text-white mb-2">
         {special && shiur.dayOfWeek && (
-          <span className="text-primary">{shiur.dayOfWeek} </span>
+          <span className="text-accent">{shiur.dayOfWeek} </span>
         )}
         {shiur.time}
       </p>
 
       {/* Topic/Location */}
       {shiur.topic && (
-        <p className="text-sm text-foreground/70 italic mb-1">
+        <p className="text-sm text-white/70 italic mb-1">
           {shiur.topic}
         </p>
       )}
       {shiur.location && (
-        <p className="text-xs md:text-sm text-foreground/60 mt-2">
+        <p className="text-xs md:text-sm text-white/60 mt-2">
           📍 {shiur.location}
         </p>
       )}
 
       {/* Days (for regular shiurim) */}
       {shiur.days && !special && (
-        <div className="mt-3 pt-3 border-t border-gray-200">
-          <p className="text-xs text-foreground/60">
+        <div className="mt-3 pt-3 border-t border-white/20">
+          <p className="text-xs text-white/60">
             {shiur.days.join(' • ')}
           </p>
         </div>

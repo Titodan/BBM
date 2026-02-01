@@ -3,7 +3,7 @@ import { statistics } from '@/data/rabbis';
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-primary-dark to-secondary overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-primary via-primary-dark to-secondary">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{
@@ -15,31 +15,24 @@ export default function Hero() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32 text-center">
         {/* Logo */}
         <div className="mb-8 md:mb-12 flex justify-center">
-          <div className="w-32 h-32 md:w-48 md:h-48 lg:w-56 lg:h-56 rounded-full bg-white/10 backdrop-blur-sm border-4 border-accent flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-4xl md:text-6xl lg:text-7xl font-bold text-accent mb-2">
-                BBM
-              </div>
-              <div className="text-xs md:text-sm text-white/80 tracking-widest">
-                BRAMPTON
-              </div>
-            </div>
+          <div className="w-64 md:w-80 lg:w-96">
+            <img 
+              src="/bbm-logo-white.png"
+              alt="BBM Brampton Beit Midrash"
+              className="w-full h-auto"
+            />
           </div>
         </div>
 
         {/* Main Tagline */}
         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 md:mb-6">
-          A PLACE TO LEARN
+          A PLACE TO GROW
         </h1>
 
         {/* Bilingual Subtitle */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-12 md:mb-16">
-          <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-accent hebrew">
-            בית מדרש
-          </p>
-          <span className="hidden sm:block text-2xl md:text-3xl text-white/60">•</span>
-          <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-wide">
-            BRAMPTON
+          <p className="text-2xl sm:text-3xl md:text-4xl font-medium text-accent tracking-wide italic">
+            BE A BEN TORAH, BE MORE
           </p>
         </div>
 

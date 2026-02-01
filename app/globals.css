@@ -16,7 +16,7 @@
   /* BBM Brand Colors */
   --color-primary: #1a3d4f; /* Deep teal/dark blue from logo */
   --color-secondary: #4a90e2; /* Bright blue */
-  --color-accent: #3dd8a7; /* Mint green accent */
+  --color-accent: #FFB800; /* Gold/yellow accent */
   --color-light: #f8fafb;
   --color-dark: #0f2027;
 }
@@ -29,7 +29,7 @@
   --color-primary: #1a3d4f;
   --color-primary-dark: #0f2027;
   --color-secondary: #4a90e2;
-  --color-accent: #3dd8a7;
+  --color-accent: #FFB800;
   --color-light: #f8fafb;
   
   /* Typography */
@@ -45,9 +45,9 @@
 }
 
 body {
-  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  min-height: 100vh;
 }
 
 /* Hebrew text styling */

@@ -12,10 +12,12 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3">
-            <div className="h-12 w-12 md:h-14 md:w-14 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-xl md:text-2xl font-bold text-accent">
-                BBM
-              </span>
+            <div className="h-12 w-12 md:h-14 md:w-14 rounded-full overflow-hidden flex items-center justify-center">
+              <img 
+                src="/bbm-navbar-logo-white.png"
+                alt="BBM Logo"
+                className="h-full w-full object-cover"
+              />
             </div>
             <span className="text-lg md:text-xl font-bold text-primary hidden sm:block">
               Brampton Beit Midrash
@@ -46,7 +48,7 @@ export default function Navbar() {
               href="#rabbis"
               className="text-foreground hover:text-primary transition-colors font-medium"
             >
-              Rabbis
+              Rabbanim
             </Link>
             <Link
               href="#contact"
@@ -110,7 +112,7 @@ export default function Navbar() {
                 onClick={() => setIsMenuOpen(false)}
                 className="text-foreground hover:text-primary transition-colors font-medium py-2"
               >
-                Rabbis
+                Rabbanim
               </Link>
               <Link
                 href="#contact"

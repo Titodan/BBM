@@ -4,7 +4,7 @@ export const shiurim: Shiur[] = [
   // Early Morning Chabura (2 Tracks)
   {
     id: 'chabura-track1-seder',
-    title: 'Track 1: Seder',
+    title: 'Track 1: Early Morning Seder',
     titleHebrew: 'מסכת גיטין פרק ג׳',
     rabbi: 'Rabbi Kahlani & Rabbi Hecht',
     time: '6:15-7:15 AM',
@@ -13,7 +13,7 @@ export const shiurim: Shiur[] = [
   },
   {
     id: 'chabura-track2-seder',
-    title: 'Track 2: Seder',
+    title: 'Track 2: Early Morning Seder',
     titleHebrew: 'מסכת גיטין פרק ג׳',
     rabbi: 'Rabbi Kahlani & Rabbi Hecht',
     time: '6:45-8:00 AM',
@@ -23,37 +23,6 @@ export const shiurim: Shiur[] = [
   
   // Morning Shiurim
   {
-    id: 'brachot-bekiut-morning',
-    title: 'Brachot בקיאות',
-    rabbi: 'Rabbi Kahlani',
-    time: '7:45-9:45 AM',
-    days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'],
-    isNew: true,
-  },
-  {
-    id: 'beitza-morning',
-    title: 'Beitza',
-    rabbi: 'Rabbi Hecht',
-    time: '7:45-9:45 AM',
-    days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'],
-    isNew: true,
-  },
-  {
-    id: 'succah-morning',
-    title: 'Succah',
-    rabbi: 'Rabbi Bazak',
-    time: '7:45-9:45 AM',
-    days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'],
-  },
-  {
-    id: 'tefilat-hashachar-morning',
-    title: 'Tefilat Hashachar',
-    rabbi: 'Rabbi Hye',
-    time: '7:45-9:45 AM',
-    days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'],
-    isNew: true,
-  },
-  {
     id: 'pesachim-biyun-morning',
     title: "B'Iyun Learning - Pesachim פרק א",
     titleHebrew: 'פסחים פרק א׳',
@@ -61,13 +30,6 @@ export const shiurim: Shiur[] = [
     time: '9:30 AM-12:30 PM',
     days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'],
     topic: 'Morning Seder',
-  },
-  {
-    id: 'mishna-bruruah',
-    title: 'Mishna Bruruah Dirshu',
-    rabbi: 'Rabbi Goldstien',
-    time: '10:15 AM',
-    days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'],
   },
   
   // Night Shiurim
@@ -111,6 +73,13 @@ export const shiurim: Shiur[] = [
     days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'],
     topic: 'Night Seder',
   },
+  {
+    id: 'mishna-bruruah',
+    title: 'Mishna Bruruah Dirshu',
+    rabbi: 'Rabbi Eli Goldstien',
+    time: '10:15 PM',
+    days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'],
+  },
   
   // Special Weekly Shiurim
   {
@@ -146,7 +115,7 @@ export const shiurim: Shiur[] = [
     rabbi: 'Rabbi Kahlani',
     time: '10:15 PM',
     dayOfWeek: 'Thursday',
-    location: "@ Rabbi Kahlani's house (25 Shirehall Lane)",
+    location: "@ Rabbi Kahlani's house",
     topic: 'Rabbi Moshe Shapira zt"l',
     isSpecial: true,
   },

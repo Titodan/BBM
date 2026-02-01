@@ -8,14 +8,13 @@ import Footer from '@/components/Footer';
 
 export default function Home() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-primary via-primary-dark to-secondary">
       <Navbar />
       <main>
         <Hero />
         <ScheduleAndShiurim />
         <RoshBeitMidrash />
         <RabbisSection />
-        <Newsletter />
       </main>
       <Footer />
     </div>

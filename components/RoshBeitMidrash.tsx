@@ -7,12 +7,12 @@ export default function RoshBeitMidrash() {
   if (!roshBeitMidrash) return null;
 
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-br from-primary to-primary-dark">
+    <section className="py-16 md:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-12 md:mb-16">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
-            Leadership
+            Rosh Beit Midrash
           </h2>
         </div>
 
@@ -44,11 +44,6 @@ export default function RoshBeitMidrash() {
 
             {/* Content Section */}
             <div className="lg:col-span-3 p-8 lg:p-12">
-              {/* Title Badge */}
-              <div className="inline-block bg-accent/10 text-accent px-4 py-2 rounded-full text-sm font-bold mb-4">
-                {roshBeitMidrash.title}
-              </div>
-
               {/* Name */}
               <h3 className="text-3xl md:text-4xl font-bold text-primary mb-6">
                 {roshBeitMidrash.name}
@@ -70,7 +65,7 @@ export default function RoshBeitMidrash() {
                   {roshBeitMidrash.shiurim.map((shiur, idx) => (
                     <span
                       key={idx}
-                      className="bg-secondary/10 text-secondary px-3 py-1 rounded-full text-sm font-semibold"
+                      className="bg-accent/10 text-accent px-3 py-1 rounded-full text-sm font-semibold"
                     >
                       {shiur}
                     </span>
