@@ -70,22 +70,21 @@ export const shiurim: Shiur[] = [
     time: '10:15 PM',
   },
   
-  // Special Weekly Shiurim
-  {
-    id: 'pirkei-avot',
-    title: 'Pirkei Avot',
-    titleHebrew: 'פירקי אבות',
-    rabbi: 'Rabbi Kahlani',
-    time: '9:00 PM',
-    dayOfWeek: 'Wednesday',
-    isSpecial: true,
-  },
+  // Special Weekly Shiurim (ordered by day of week)
   {
     id: 'nefesh-hachaim',
-    title: 'Nefesh HaChaim שנ"א',
+    title: 'Nefesh HaChaim',
     rabbi: 'Rabbi Kahlani',
     time: '9:00 PM',
     dayOfWeek: 'Tuesday',
+    isSpecial: true,
+  },
+  {
+    id: 'pirkei-avot',
+    title: 'פרקי אבות',
+    rabbi: 'Rabbi Kahlani',
+    time: '9:00 PM',
+    dayOfWeek: 'Wednesday',
     isSpecial: true,
   },
   {
