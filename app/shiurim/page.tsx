@@ -12,7 +12,7 @@ export default function ShiurimPage() {
             <h1 className="text-4xl md:text-5xl font-bold text-primary mb-4">
               Shiurim
             </h1>
-            <p className="text-xl text-foreground/70">
+            <p className="text-xl text-gray-700">
               Coming Soon - Audio recordings of all shiurim
             </p>
           </div>
@@ -35,12 +35,12 @@ export default function ShiurimPage() {
             <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
               Audio Library Coming Soon
             </h2>
-            <p className="text-lg text-foreground/70 mb-8">
+            <p className="text-lg text-gray-700 mb-8">
               We're working on building a comprehensive library of recorded shiurim with an integrated audio player. 
               Check back soon to access all our Torah learning content online.
             </p>
             <div className="space-y-4">
-              <p className="text-foreground/60">
+              <p className="text-gray-600">
                 In the meantime, you can:
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

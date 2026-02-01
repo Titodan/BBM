@@ -19,7 +19,7 @@ export default function ScheduleAndShiurim() {
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary mb-4">
             Daily Schedule
           </h2>
-          <p className="text-lg md:text-xl text-foreground/70 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-gray-700 max-w-2xl mx-auto">
             Join us for davening and Torah learning throughout the day
           </p>
         </div>

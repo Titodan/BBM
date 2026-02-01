@@ -4,7 +4,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer id="contact" className="bg-white text-foreground">
+    <footer id="contact" className="bg-white text-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-12">
@@ -23,7 +23,7 @@ export default function Footer() {
                 <p className="text-sm text-primary/70 hebrew">בית מדרש</p>
               </div>
             </div>
-            <p className="text-foreground/80 mb-4 leading-relaxed">
+            <p className="text-gray-700 mb-4 leading-relaxed">
               A place dedicated to Torah learning and spiritual growth in the heart of Hendon.
               Join us for davening, shiurim, and community learning.
             </p>
@@ -36,7 +36,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/"
-                  className="text-foreground/80 hover:text-accent transition-colors"
+                  className="text-gray-700 hover:text-accent transition-colors"
                 >
                   Home
                 </Link>
@@ -44,7 +44,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/shiurim"
-                  className="text-foreground/80 hover:text-accent transition-colors"
+                  className="text-gray-700 hover:text-accent transition-colors"
                 >
                   Shiurim
                 </Link>
@@ -52,7 +52,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="#schedule"
-                  className="text-foreground/80 hover:text-accent transition-colors"
+                  className="text-gray-700 hover:text-accent transition-colors"
                 >
                   Schedule
                 </Link>
@@ -60,7 +60,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="#rabbis"
-                  className="text-foreground/80 hover:text-accent transition-colors"
+                  className="text-gray-700 hover:text-accent transition-colors"
                 >
                   Our Rabbanim
                 </Link>
@@ -86,7 +86,7 @@ export default function Footer() {
                 </svg>
                 <a
                   href="mailto:Rabbikahlani@wearechazak.com"
-                  className="text-foreground/80 hover:text-accent transition-colors break-words"
+                  className="text-gray-700 hover:text-accent transition-colors break-words"
                 >
                   Rabbikahlani@<wbr />wearechazak.com
                 </a>
@@ -105,7 +105,7 @@ export default function Footer() {
                   <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 <div className="flex flex-col gap-1">
-                  <span className="text-foreground/80">
+                  <span className="text-gray-700">
                     73 Brent St, London NW4 2EA
                   </span>
                   <div className="flex gap-3 text-sm">
@@ -117,7 +117,7 @@ export default function Footer() {
                     >
                       Google Maps
                     </a>
-                    <span className="text-foreground/30">•</span>
+                    <span className="text-gray-400">•</span>
                     <a
                       href="https://waze.com/ul?q=73+Brent+St+London+NW4+2EA"
                       target="_blank"
@@ -136,7 +136,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-8 border-t-4 border-primary">
           <div className="flex flex-col md:flex-row justify-center items-center gap-4">
-            <p className="text-foreground/70 text-sm text-center md:text-left">
+            <p className="text-gray-600 text-sm text-center md:text-left">
               © {currentYear} Brampton Beit Midrash
             </p>
           </div>

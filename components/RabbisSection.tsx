@@ -78,7 +78,7 @@ export default function RabbisSection() {
 
                 {/* Bio */}
                 {rabbi.bio && (
-                  <p className="text-sm text-foreground/70 leading-relaxed">
+                  <p className="text-sm text-gray-700 leading-relaxed">
                     {rabbi.bio}
                   </p>
                 )}

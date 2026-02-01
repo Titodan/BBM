@@ -51,7 +51,7 @@ export default function RoshBeitMidrash() {
 
               {/* Bio */}
               <div className="prose prose-lg max-w-none mb-6">
-                <p className="text-foreground/80 leading-relaxed">
+                <p className="text-gray-700 leading-relaxed">
                   {roshBeitMidrash.bio}
                 </p>
               </div>
