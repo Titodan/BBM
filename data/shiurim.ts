@@ -72,6 +72,15 @@ export const shiurim: Shiur[] = [
   
   // Special Weekly Shiurim
   {
+    id: 'pirkei-avot',
+    title: 'Pirkei Avot',
+    titleHebrew: 'פירקי אבות',
+    rabbi: 'Rabbi Kahlani',
+    time: '9:00 PM',
+    dayOfWeek: 'Wednesday',
+    isSpecial: true,
+  },
+  {
     id: 'nefesh-hachaim',
     title: 'Nefesh HaChaim שנ"א',
     rabbi: 'Rabbi Kahlani',
