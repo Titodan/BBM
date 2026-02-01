@@ -26,7 +26,7 @@ export const rabbis: Rabbi[] = [
   {
     id: 'rabbi-hye',
     name: 'Rabbi Hye',
-    photo: '/images/rabbis/rabbi-hye.png',
+    photo: '/images/rabbis/faces/rabbi-hye.png',
     shiurim: ['Tefilat Hashachar'],
   },
   {
