@@ -145,15 +145,6 @@ function ShiurCard({ shiur, special = false }: { shiur: any; special?: boolean }
           📍 {shiur.location}
         </p>
       )}
-
-      {/* Days (for regular shiurim) */}
-      {shiur.days && !special && (
-        <div className="mt-3 pt-3 border-t border-white/20">
-          <p className="text-xs text-white/60">
-            {shiur.days.join(' • ')}
-          </p>
-        </div>
-      )}
     </div>
   );
 }
