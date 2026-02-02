@@ -5,7 +5,17 @@
       "name": "pesachim",
       "createdDate": "2026-02-02T19:11:41.889Z",
       "folders": [],
-      "shiurim": []
+      "shiurim": [
+        {
+          "id": "bitul-1770067406618",
+          "title": "bitul",
+          "recordedDate": "2026-02-02",
+          "duration": 0,
+          "audioUrl": "https://pub-d40a1a8ecfcd4bb0878a1b19dc9a43c6.r2.dev/bitul-1770067406618.MP3",
+          "fileSize": 22659574,
+          "uploadedDate": "2026-02-02T21:23:29.978Z"
+        }
+      ]
     }
   ]
 }

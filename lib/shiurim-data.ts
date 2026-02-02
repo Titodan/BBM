@@ -1,38 +1,35 @@
-import fs from 'fs/promises';
-import path from 'path';
 import { ShiurimLibrary, ShiurFolder, ShiurRecording } from '@/types';
+import { uploadJSON, downloadJSON } from './r2-client';
 
-const DATA_FILE_PATH = path.join(process.cwd(), 'data', 'shiurim-library.json');
+const DATA_FILE_NAME = 'shiurim-library.json';
 
 /**
  * Get the entire shiurim library
  */
 export async function getShiurimLibrary(): Promise<ShiurimLibrary> {
   try {
-    const data = await fs.readFile(DATA_FILE_PATH, 'utf-8');
-    return JSON.parse(data);
-  } catch (error) {
-    // If file doesn't exist, return empty library
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+    // Try to get from R2
+    const data = await downloadJSON(DATA_FILE_NAME);
+    
+    if (data === null) {
+      // File doesn't exist yet, return empty library
       return { folders: [] };
     }
-    throw error;
+    
+    return data;
+  } catch (error) {
+    console.error('Error getting shiurim library:', error);
+    // Return empty library on error
+    return { folders: [] };
   }
 }
 
 /**
- * Save the shiurim library with atomic write
+ * Save the shiurim library to R2
  */
 export async function saveShiurimLibrary(library: ShiurimLibrary): Promise<void> {
   try {
-    // Ensure data directory exists
-    const dataDir = path.dirname(DATA_FILE_PATH);
-    await fs.mkdir(dataDir, { recursive: true });
-
-    // Write to temp file first, then rename (atomic operation)
-    const tempPath = `${DATA_FILE_PATH}.tmp`;
-    await fs.writeFile(tempPath, JSON.stringify(library, null, 2), 'utf-8');
-    await fs.rename(tempPath, DATA_FILE_PATH);
+    await uploadJSON(library, DATA_FILE_NAME);
   } catch (error) {
     console.error('Error saving shiurim library:', error);
     throw new Error('Failed to save shiurim library');

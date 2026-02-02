@@ -7,6 +7,18 @@ import { ShiurRecording } from '@/types';
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 const ALLOWED_TYPES = ['audio/mpeg', 'audio/mp3', 'audio/m4a', 'audio/wav', 'audio/x-m4a'];
 
+// Configure Vercel to allow larger payloads
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '100mb',
+    },
+  },
+};
+
+// Set maximum duration for serverless function (Vercel)
+export const maxDuration = 60; // 60 seconds
+
 /**
  * POST /api/admin/upload
  * Upload audio file and metadata

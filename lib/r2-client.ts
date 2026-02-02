@@ -102,3 +102,64 @@ export async function getPresignedUrl(
 export function extractFileName(url: string): string {
   return url.split('/').pop() || '';
 }
+
+/**
+ * Upload JSON data to R2
+ * @param data - JSON data to upload
+ * @param fileName - Name to save the file as
+ * @returns Public URL of the uploaded file
+ */
+export async function uploadJSON(
+  data: any,
+  fileName: string
+): Promise<string> {
+  try {
+    const jsonString = JSON.stringify(data, null, 2);
+    const buffer = Buffer.from(jsonString, 'utf-8');
+
+    const command = new PutObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: fileName,
+      Body: buffer,
+      ContentType: 'application/json',
+    });
+
+    await r2Client.send(command);
+
+    return `${PUBLIC_URL}/${fileName}`;
+  } catch (error) {
+    console.error('Error uploading JSON to R2:', error);
+    throw new Error('Failed to upload JSON file');
+  }
+}
+
+/**
+ * Download JSON data from R2
+ * @param fileName - Name of the file to download
+ * @returns Parsed JSON data
+ */
+export async function downloadJSON(fileName: string): Promise<any> {
+  try {
+    const command = new GetObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: fileName,
+    });
+
+    const response = await r2Client.send(command);
+    
+    if (!response.Body) {
+      throw new Error('No data received from R2');
+    }
+
+    // Convert stream to string
+    const bodyString = await response.Body.transformToString();
+    return JSON.parse(bodyString);
+  } catch (error: any) {
+    // If file doesn't exist, return null
+    if (error.name === 'NoSuchKey' || error.Code === 'NoSuchKey') {
+      return null;
+    }
+    console.error('Error downloading JSON from R2:', error);
+    throw new Error('Failed to download JSON file');
+  }
+}
