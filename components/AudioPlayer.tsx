@@ -5,11 +5,10 @@ import { useRef, useState, useEffect } from 'react';
 interface AudioPlayerProps {
   audioUrl: string;
   title: string;
-  rabbi: string;
   onDownload?: () => void;
 }
 
-export default function AudioPlayer({ audioUrl, title, rabbi, onDownload }: AudioPlayerProps) {
+export default function AudioPlayer({ audioUrl, title, onDownload }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -95,7 +94,7 @@ export default function AudioPlayer({ audioUrl, title, rabbi, onDownload }: Audi
       // Default download behavior
       const link = document.createElement('a');
       link.href = audioUrl;
-      link.download = `${title} - ${rabbi}.mp3`;
+      link.download = `${title}.mp3`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -106,10 +105,9 @@ export default function AudioPlayer({ audioUrl, title, rabbi, onDownload }: Audi
     <div className="w-full bg-white rounded-lg shadow-md p-4">
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
       
-      {/* Title and Rabbi */}
+      {/* Title */}
       <div className="mb-3">
         <h3 className="font-semibold text-gray-900">{title}</h3>
-        <p className="text-sm text-gray-600">{rabbi}</p>
       </div>
 
       {/* Play/Pause Button */}

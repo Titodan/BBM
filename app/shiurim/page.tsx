@@ -234,7 +234,6 @@ function ShiurRow({ shiur }: { shiur: ShiurRecording }) {
       <AudioPlayer
         audioUrl={shiur.audioUrl}
         title={shiur.title}
-        rabbi={shiur.rabbi}
       />
     </div>
   );

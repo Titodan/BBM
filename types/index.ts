@@ -40,7 +40,6 @@ export interface Statistic {
 export interface ShiurRecording {
   id: string;
   title: string;
-  rabbi: string;
   recordedDate: string;
   duration: number; // seconds
   audioUrl: string;

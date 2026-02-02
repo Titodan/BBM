@@ -121,10 +121,6 @@ function ShiurCard({ shiur, special = false }: { shiur: any; special?: boolean }
         )}
       </div>
 
-      {/* Rabbi */}
-      <p className="text-sm md:text-base font-semibold text-accent/90 mb-2">
-        {shiur.rabbi}
-      </p>
 
       {/* Time */}
       <p className="text-base md:text-lg font-bold text-white mb-2">

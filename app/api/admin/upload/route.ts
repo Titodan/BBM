@@ -19,7 +19,6 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const file = formData.get('file') as File;
     const title = formData.get('title') as string;
-    const rabbi = formData.get('rabbi') as string;
     const recordedDate = formData.get('recordedDate') as string;
     const folderPath = JSON.parse(formData.get('folderPath') as string || '[]');
 
@@ -31,9 +30,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!title || !rabbi || !recordedDate) {
+    if (!title || !recordedDate) {
       return NextResponse.json(
-        { error: 'Missing required fields: title, rabbi, or recordedDate' },
+        { error: 'Missing required fields: title or recordedDate' },
         { status: 400 }
       );
     }
@@ -82,7 +81,6 @@ export async function POST(req: NextRequest) {
     const shiur: ShiurRecording = {
       id: `${sanitizedTitle}-${timestamp}`,
       title,
-      rabbi,
       recordedDate,
       duration,
       audioUrl,

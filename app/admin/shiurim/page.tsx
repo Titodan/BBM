@@ -4,14 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShiurimLibrary, ShiurFolder, ShiurRecording } from '@/types';
 
-const RABBIS = [
-  'Rabbi Kahlani',
-  'Rabbi Hecht',
-  'Rabbi Bazak',
-  'Rabbi Hye',
-  'Rabbi Eli Goldstien',
-];
-
 export default function AdminShiurimPage() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -26,7 +18,6 @@ export default function AdminShiurimPage() {
   // Upload form state
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadTitle, setUploadTitle] = useState('');
-  const [uploadRabbi, setUploadRabbi] = useState(RABBIS[0]);
   const [uploadDate, setUploadDate] = useState(new Date().toISOString().split('T')[0]);
   const [uploadProgress, setUploadProgress] = useState(false);
 
@@ -140,7 +131,7 @@ export default function AdminShiurimPage() {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!uploadFile || !uploadTitle || !uploadRabbi || currentPath.length === 0) {
+    if (!uploadFile || !uploadTitle || currentPath.length === 0) {
       showMessage('error', 'Please fill all fields and select a folder');
       return;
     }
@@ -150,7 +141,6 @@ export default function AdminShiurimPage() {
       const formData = new FormData();
       formData.append('file', uploadFile);
       formData.append('title', uploadTitle);
-      formData.append('rabbi', uploadRabbi);
       formData.append('recordedDate', uploadDate);
       formData.append('folderPath', JSON.stringify(currentPath));
 
@@ -242,6 +232,23 @@ export default function AdminShiurimPage() {
     return current;
   };
 
+  const getFolderNamesFromPath = (path: string[]): string[] => {
+    const names: string[] = [];
+    let folders = library.folders;
+
+    for (const id of path) {
+      const folder = folders.find(f => f.id === id);
+      if (folder) {
+        names.push(folder.name);
+        folders = folder.folders;
+      } else {
+        names.push(id); // Fallback to ID if folder not found
+      }
+    }
+
+    return names;
+  };
+
   const currentFolder = getCurrentFolder();
   const displayFolders = currentFolder?.folders || library.folders;
   const displayShiurim = currentFolder?.shiurim || [];
@@ -330,16 +337,15 @@ export default function AdminShiurimPage() {
           >
             Root
           </button>
-          {currentPath.map((id, index) => {
-            const folder = library.folders.find(f => f.id === id);
+          {getFolderNamesFromPath(currentPath).map((name, index) => {
             return (
-              <span key={id} className="flex items-center">
+              <span key={index} className="flex items-center">
                 <span className="mx-2 text-gray-400">/</span>
                 <button
                   onClick={() => setCurrentPath(currentPath.slice(0, index + 1))}
                   className="text-primary hover:underline"
                 >
-                  {folder?.name || id}
+                  {name}
                 </button>
               </span>
             );
@@ -393,9 +399,6 @@ export default function AdminShiurimPage() {
                           <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
                         </svg>
                         <span className="font-medium">{folder.name}</span>
-                        <span className="text-sm text-gray-500">
-                          ({folder.folders.length}f, {folder.shiurim.length}s)
-                        </span>
                       </button>
                       <button
                         onClick={() => handleDeleteFolder([...currentPath, folder.id])}
@@ -423,7 +426,7 @@ export default function AdminShiurimPage() {
                 </div>
               ) : (
                 <div className="bg-blue-50 text-blue-800 px-4 py-3 rounded-lg mb-4 text-sm">
-                  Uploading to: <strong>{currentPath.join(' / ')}</strong>
+                  Uploading to: <strong>{getFolderNamesFromPath(currentPath).join(' / ')}</strong>
                 </div>
               )}
               
@@ -463,24 +466,6 @@ export default function AdminShiurimPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Rabbi
-                  </label>
-                  <select
-                    value={uploadRabbi}
-                    onChange={(e) => setUploadRabbi(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    required
-                  >
-                    {RABBIS.map((rabbi) => (
-                      <option key={rabbi} value={rabbi}>
-                        {rabbi}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Recorded Date
                   </label>
                   <input
@@ -516,7 +501,7 @@ export default function AdminShiurimPage() {
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900">{shiur.title}</h3>
                     <p className="text-sm text-gray-600">
-                      {shiur.rabbi} • {new Date(shiur.recordedDate).toLocaleDateString()}
+                      {new Date(shiur.recordedDate).toLocaleDateString()}
                     </p>
                   </div>
                   <button
