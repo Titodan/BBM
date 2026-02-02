@@ -14,7 +14,7 @@
   --foreground: #171717;
   
   /* BBM Brand Colors */
-  --color-primary: #1a3d4f; /* Deep teal/dark blue from logo */
+  --color-primary: #284451; /* Deep teal/dark blue from logo */
   --color-secondary: #4a90e2; /* Bright blue */
   --color-accent: #FFB800; /* Gold/yellow accent */
   --color-light: #f8fafb;
@@ -26,8 +26,8 @@
   --color-foreground: var(--foreground);
   
   /* Brand colors */
-  --color-primary: #1a3d4f;
-  --color-primary-dark: #0f2027;
+  --color-primary: #284451;
+  --color-primary-dark: #1a3d4f;
   --color-secondary: #4a90e2;
   --color-accent: #FFB800;
   --color-light: #f8fafb;

@@ -425,7 +425,7 @@ export default function AdminShiurimPage() {
                   Please select a folder first by clicking on a folder or creating one.
                 </div>
               ) : (
-                <div className="bg-blue-50 text-blue-800 px-4 py-3 rounded-lg mb-4 text-sm">
+                <div className="bg-primary/10 text-primary px-4 py-3 rounded-lg mb-4 text-sm">
                   Uploading to: <strong>{getFolderNamesFromPath(currentPath).join(' / ')}</strong>
                 </div>
               )}
@@ -480,7 +480,7 @@ export default function AdminShiurimPage() {
                 <button
                   type="submit"
                   disabled={uploadProgress || currentPath.length === 0}
-                  className="w-full bg-secondary text-white py-3 rounded-lg font-bold hover:bg-secondary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {uploadProgress ? 'Uploading...' : 'Upload Shiur'}
                 </button>
