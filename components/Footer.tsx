@@ -64,6 +64,14 @@ export default function Footer() {
                   Our Rabbanim
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/admin/shiurim"
+                  className="text-gray-500 hover:text-accent transition-colors text-sm"
+                >
+                  Admin
+                </Link>
+              </li>
             </ul>
           </div>
 
