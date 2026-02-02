@@ -20,7 +20,7 @@ export default function Hero() {
           <div className="w-64 md:w-80 lg:w-96">
             <img 
               src="/bbm-logo-white.png"
-              alt="BBM Brampton Beit Midrash"
+              alt="BBM Brampton בית מדרש"
               className="w-full h-auto"
             />
           </div>

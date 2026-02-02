@@ -7,12 +7,12 @@ export default function RoshBeitMidrash() {
   if (!roshBeitMidrash) return null;
 
   return (
-    <section className="py-16 md:py-24">
+    <section id="rosh-beit-midrash" className="py-16 md:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-12 md:mb-16">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
-            Rosh Beit Midrash
+            Rosh בית מדרש
           </h2>
         </div>
 

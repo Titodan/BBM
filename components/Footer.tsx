@@ -19,8 +19,7 @@ export default function Footer() {
                 />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-primary">Brampton Beit Midrash</h3>
-                <p className="text-sm text-primary/70 hebrew">בית מדרש</p>
+                <h3 className="text-xl font-bold text-primary">Brampton בית מדרש</h3>
               </div>
             </div>
             <p className="text-gray-700 mb-4 leading-relaxed">
@@ -137,7 +136,7 @@ export default function Footer() {
         <div className="pt-8 border-t-4 border-primary">
           <div className="flex flex-col md:flex-row justify-center items-center gap-4">
             <p className="text-gray-600 text-sm text-center md:text-left">
-              © {currentYear} Brampton Beit Midrash
+              © {currentYear} Brampton בית מדרש
             </p>
           </div>
         </div>

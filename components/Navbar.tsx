@@ -20,7 +20,7 @@ export default function Navbar() {
               />
             </div>
             <span className="text-lg md:text-xl font-bold text-primary hidden sm:block">
-              Brampton Beit Midrash
+              Brampton בית מדרש
             </span>
           </Link>
 
@@ -45,7 +45,7 @@ export default function Navbar() {
               Schedule
             </Link>
             <Link
-              href="/#rabbis"
+              href="/#rosh-beit-midrash"
               className="text-primary hover:text-secondary transition-colors font-medium"
             >
               Rabbanim
@@ -108,7 +108,7 @@ export default function Navbar() {
                 Schedule
               </Link>
               <Link
-                href="/#rabbis"
+                href="/#rosh-beit-midrash"
                 onClick={() => setIsMenuOpen(false)}
                 className="text-primary hover:text-secondary transition-colors font-medium py-2"
               >
