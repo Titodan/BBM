@@ -1,0 +1,22 @@
+{
+  "folders": [
+    {
+      "id": "pesachim-1770059501889",
+      "name": "pesachim",
+      "createdDate": "2026-02-02T19:11:41.889Z",
+      "folders": [],
+      "shiurim": [
+        {
+          "id": "dsafsd-1770060026379",
+          "title": "dsafsd",
+          "rabbi": "Rabbi Kahlani",
+          "recordedDate": "2026-02-02",
+          "duration": 0,
+          "audioUrl": "https://pub-d40a1a8ecfcd4bb0878a1b19dc9a43c6.r2.dev/dsafsd-1770060026379.MP3",
+          "fileSize": 22659574,
+          "uploadedDate": "2026-02-02T19:20:46.106Z"
+        }
+      ]
+    }
+  ]
+}

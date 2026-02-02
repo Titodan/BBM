@@ -35,3 +35,27 @@ export interface Statistic {
   value: string;
   label: string;
 }
+
+// Shiurim Library Types
+export interface ShiurRecording {
+  id: string;
+  title: string;
+  rabbi: string;
+  recordedDate: string;
+  duration: number; // seconds
+  audioUrl: string;
+  fileSize: number; // bytes
+  uploadedDate: string;
+}
+
+export interface ShiurFolder {
+  id: string;
+  name: string;
+  createdDate: string;
+  folders: ShiurFolder[]; // Recursive: folders can contain folders
+  shiurim: ShiurRecording[];
+}
+
+export interface ShiurimLibrary {
+  folders: ShiurFolder[];
+}
