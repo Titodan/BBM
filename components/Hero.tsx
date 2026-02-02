@@ -3,9 +3,21 @@ import { statistics } from '@/data/rabbis';
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden" style={{
-      background: 'linear-gradient(to bottom right, #1a3d4f, #0f2027, #4a90e2)'
-    }}>
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Background Image */}
+      <div className="absolute inset-0">
+        <img 
+          src="/images/beit-midrash-bg.png"
+          alt="Beit Midrash Background"
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      {/* Gradient Overlay */}
+      <div className="absolute inset-0" style={{
+        background: 'linear-gradient(to bottom right, rgba(26, 61, 79, 0.85), rgba(15, 32, 39, 0.85), rgba(74, 144, 226, 0.85))'
+      }} />
+
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{
