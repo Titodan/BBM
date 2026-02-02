@@ -95,6 +95,32 @@ export async function getPresignedUrl(
 }
 
 /**
+ * Generate a presigned URL for uploading a file directly to R2
+ * @param fileName - Name of the file to upload
+ * @param contentType - MIME type of the file
+ * @param expiresIn - Expiration time in seconds (default: 1 hour)
+ * @returns Presigned URL for PUT request
+ */
+export async function getPresignedUploadUrl(
+  fileName: string,
+  contentType: string,
+  expiresIn: number = 3600
+): Promise<string> {
+  try {
+    const command = new PutObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: fileName,
+      ContentType: contentType,
+    });
+
+    return await getSignedUrl(r2Client, command, { expiresIn });
+  } catch (error) {
+    console.error('Error generating presigned upload URL:', error);
+    throw new Error('Failed to generate presigned upload URL');
+  }
+}
+
+/**
  * Extract filename from a full R2 URL
  * @param url - Full R2 URL
  * @returns Filename

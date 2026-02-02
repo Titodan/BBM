@@ -139,18 +139,59 @@ export default function AdminShiurimPage() {
 
     setUploadProgress(true);
     try {
-      const formData = new FormData();
-      formData.append('file', uploadFile);
-      formData.append('title', uploadTitle);
-      formData.append('recordedDate', uploadDate);
-      formData.append('folderPath', JSON.stringify(currentPath));
+      // Step 1: Generate unique filename
+      const timestamp = Date.now();
+      const sanitizedTitle = uploadTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const ext = uploadFile.name.split('.').pop();
+      const fileName = `${sanitizedTitle}-${timestamp}.${ext}`;
 
-      const res = await fetch('/api/admin/upload', {
+      // Step 2: Get presigned URL for direct upload to R2
+      const presignedRes = await fetch('/api/admin/presigned-url', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName,
+          contentType: uploadFile.type || 'audio/mpeg',
+        }),
       });
 
-      if (res.ok) {
+      if (!presignedRes.ok) {
+        const data = await presignedRes.json();
+        showMessage('error', data.error || 'Failed to get upload URL');
+        return;
+      }
+
+      const { uploadUrl } = await presignedRes.json();
+
+      // Step 3: Upload file directly to R2 using presigned URL
+      const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: uploadFile,
+        headers: {
+          'Content-Type': uploadFile.type || 'audio/mpeg',
+        },
+      });
+
+      if (!uploadRes.ok) {
+        showMessage('error', 'Failed to upload file to storage');
+        return;
+      }
+
+      // Step 4: Register the upload in our system
+      const registerRes = await fetch('/api/admin/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: uploadTitle,
+          recordedDate: uploadDate,
+          folderPath: currentPath,
+          fileName,
+          fileSize: uploadFile.size,
+          contentType: uploadFile.type || 'audio/mpeg',
+        }),
+      });
+
+      if (registerRes.ok) {
         showMessage('success', 'Shiur uploaded successfully');
         setUploadFile(null);
         setUploadTitle('');
@@ -160,10 +201,11 @@ export default function AdminShiurimPage() {
         const fileInput = document.getElementById('file-upload') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
       } else {
-        const data = await res.json();
-        showMessage('error', data.error || 'Failed to upload shiur');
+        const data = await registerRes.json();
+        showMessage('error', data.error || 'Failed to register upload');
       }
     } catch (error) {
+      console.error('Upload error:', error);
       showMessage('error', 'Failed to upload shiur');
     } finally {
       setUploadProgress(false);
