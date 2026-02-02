@@ -18,14 +18,6 @@ export default function Hero() {
         background: 'linear-gradient(to bottom right, rgba(26, 61, 79, 0.85), rgba(15, 32, 39, 0.85), rgba(74, 144, 226, 0.85))'
       }} />
 
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-          backgroundSize: '40px 40px'
-        }} />
-      </div>
-
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32 text-center">
         {/* Logo */}
         <div className="mb-8 md:mb-12 flex justify-center">

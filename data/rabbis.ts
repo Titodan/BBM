@@ -5,7 +5,7 @@ export const rabbis: Rabbi[] = [
     id: 'rabbi-kahlani',
     name: 'Rabbi Natan Kahlani',
     title: 'Rosh Beit Hamidrash',
-    photo: '/images/rabbis/rabbi-kahlani-portrait.png',
+    photo: '/images/rabbis/rabbi-kahlani-portrait-new.png',
     email: 'Rabbikahlani@wearechazak.com',
     bio: `Born in London, Rabbi Kahlani lived in Jerusalem where he co-founded Kehilat Avriechim Har Nof for English-speaking families. With 17 years of studying in Yeshiva, he was a devoted student of R' Osher Arieli Shlita for 6 years in Gemara Shiur and remains a Chabura member of R' Osher's graduates. Rabbi Kahlani studied Sedarim Kodshim and Moed, earned Smicha from Rabbi Zalman Nechemia Goldberg Shlita, and studied under Rabbi Moshe Shapira ZT"L. He has given weekly shiurim in Mir and other yeshivot in Jerusalem.`,
     shiurim: ['Brachot בקיאות', 'Pesachim פרק א B\'Iyun', 'Gittin Perek 3', 'Nefesh HaChaim'],

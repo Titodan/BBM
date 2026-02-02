@@ -24,7 +24,7 @@ export const shiurim: Shiur[] = [
     title: 'Pesachim',
     titleHebrew: 'מסכת פסחים פרק א׳ בעיון',
     rabbi: 'Rabbi Kahlani',
-    time: '9:30-11:30 AM',
+    time: '9:30-12:30 AM',
   },
   
   // Night Shiurim
