@@ -23,12 +23,6 @@ const rules = {
       delete: "true",
     },
   },
-  $default: {
-    allow: {
-      // Allow storage uploads (for event posters)
-      "has-storage-permission": "true",
-    },
-  },
 } satisfies InstantRules;
 
 export default rules;
