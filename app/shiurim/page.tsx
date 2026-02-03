@@ -18,6 +18,24 @@ export default async function ShiurimPage({ searchParams }: PageProps) {
   const currentFolder = await getFolderByPath(folderPath);
   const library = await getShiurimLibrary();
 
+  // Helper function to get folder names for breadcrumb
+  const getFolderNames = async (path: string[]): Promise<{ id: string; name: string }[]> => {
+    const names: { id: string; name: string }[] = [];
+    let currentFolders = library.folders;
+    
+    for (const folderId of path) {
+      const folder = currentFolders.find(f => f.id === folderId);
+      if (folder) {
+        names.push({ id: folderId, name: folder.name });
+        currentFolders = folder.folders;
+      }
+    }
+    
+    return names;
+  };
+
+  const breadcrumbFolders = await getFolderNames(folderPath);
+
   if (!currentFolder && folderPath.length > 0) {
     return (
       <div className="min-h-screen">
@@ -40,58 +58,63 @@ export default async function ShiurimPage({ searchParams }: PageProps) {
   const folders = currentFolder?.folders || library.folders;
   const shiurim = currentFolder?.shiurim || [];
   const hasContent = folders.length > 0 || shiurim.length > 0;
+  
+  // Check if we're at root level and should show category sections
+  const isRootLevel = folderPath.length === 0;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
       <main className="pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Breadcrumb Navigation */}
-          <nav className="flex mb-8 text-sm" aria-label="Breadcrumb">
-            <ol className="inline-flex items-center space-x-1 md:space-x-3">
-              <li className="inline-flex items-center">
-                <Link
-                  href="/shiurim"
-                  className="text-gray-700 hover:text-primary transition-colors"
-                >
-                  Shiurim
-                </Link>
-              </li>
-              {folderPath.map((segment, index) => {
-                const path = folderPath.slice(0, index + 1).join('/');
-                const isLast = index === folderPath.length - 1;
-                return (
-                  <li key={segment}>
-                    <div className="flex items-center">
-                      <svg
-                        className="w-6 h-6 text-gray-400"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      {isLast ? (
-                        <span className="ml-1 font-medium text-primary md:ml-2">
-                          {currentFolder?.name}
-                        </span>
-                      ) : (
-                        <Link
-                          href={`/shiurim?path=${path}`}
-                          className="ml-1 text-gray-700 hover:text-primary transition-colors md:ml-2"
+          {!isRootLevel && (
+            <nav className="flex mb-8 text-sm" aria-label="Breadcrumb">
+              <ol className="inline-flex items-center space-x-1 md:space-x-3">
+                <li className="inline-flex items-center">
+                  <Link
+                    href="/shiurim"
+                    className="text-gray-700 hover:text-primary transition-colors font-medium"
+                  >
+                    Shiurim
+                  </Link>
+                </li>
+                {breadcrumbFolders.map((folder, index) => {
+                  const path = folderPath.slice(0, index + 1).join('/');
+                  const isLast = index === breadcrumbFolders.length - 1;
+                  return (
+                    <li key={folder.id}>
+                      <div className="flex items-center">
+                        <svg
+                          className="w-6 h-6 text-gray-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
                         >
-                          {currentFolder?.name}
-                        </Link>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
-          </nav>
+                          <path
+                            fillRule="evenodd"
+                            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        {isLast ? (
+                          <span className="ml-1 font-medium text-primary md:ml-2">
+                            {folder.name}
+                          </span>
+                        ) : (
+                          <Link
+                            href={`/shiurim?path=${path}`}
+                            className="ml-1 text-gray-700 hover:text-primary transition-colors md:ml-2"
+                          >
+                            {folder.name}
+                          </Link>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            </nav>
+          )}
 
           {/* Page Header */}
           <div className="text-center mb-12">
@@ -99,13 +122,18 @@ export default async function ShiurimPage({ searchParams }: PageProps) {
               {folderPath.length === 0 ? 'Shiurim Library' : currentFolder?.name}
             </h1>
             <p className="text-xl text-gray-700">
-              {hasContent
+              {isRootLevel
+                ? 'Choose a category to browse shiurim'
+                : hasContent
                 ? 'Browse folders and listen to shiurim'
                 : 'Shiurim will appear here once uploaded'}
             </p>
           </div>
 
-          {!hasContent ? (
+          {isRootLevel ? (
+            /* Category Sections - Special display for root level */
+            <CategorySections folders={folders} />
+          ) : !hasContent ? (
             /* Empty State */
             <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-8 md:p-12 text-center">
               <svg
@@ -170,6 +198,113 @@ export default async function ShiurimPage({ searchParams }: PageProps) {
   );
 }
 
+function CategorySections({ folders }: { folders: ShiurFolder[] }) {
+  // Define the three main categories
+  const categories = [
+    { 
+      id: 'gemara', 
+      name: 'Gemara', 
+      nameHebrew: 'גמרא',
+    },
+    { 
+      id: 'sefarim', 
+      name: 'Sefarim', 
+      nameHebrew: 'ספרים',
+    },
+    { 
+      id: 'shmoozim', 
+      name: 'Shmoozim', 
+      nameHebrew: 'שיחות',
+    },
+  ];
+
+  // Find or create category folders
+  const getCategoryFolder = (categoryId: string) => {
+    return folders.find(f => f.id.toLowerCase().startsWith(categoryId));
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {categories.map((category) => {
+          const folder = getCategoryFolder(category.id);
+
+          return folder ? (
+            <Link
+              key={category.id}
+              href={`/shiurim?path=${folder.id}`}
+            >
+              <div className="bg-primary rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-10 cursor-pointer group h-96 flex flex-col justify-between">
+                {/* Content */}
+                <div className="flex-1 flex flex-col justify-center">
+                  <div className="text-center space-y-4">
+                    <h2 className="text-4xl font-bold text-white group-hover:text-accent transition-colors">
+                      {category.name}
+                    </h2>
+                    <div className="h-px w-16 bg-accent mx-auto"></div>
+                    <p className="text-6xl font-hebrew text-white/95 font-semibold">
+                      {category.nameHebrew}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="text-center pt-6 border-t border-white/20">
+                  <div className="flex items-center justify-center gap-2 text-white/90 font-medium group-hover:text-accent transition-colors group-hover:gap-3">
+                    <span>Enter</span>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ) : (
+            <div
+              key={category.id}
+              className="bg-gray-400 rounded-2xl shadow-xl p-8 h-96 flex flex-col justify-between opacity-50"
+            >
+              {/* Header */}
+              <div className="text-center">
+                <h2 className="text-3xl font-bold text-white mb-3">
+                  {category.name}
+                </h2>
+                <p className="text-4xl font-hebrew text-white/90 mb-6">
+                  {category.nameHebrew}
+                </p>
+              </div>
+
+              {/* Empty State */}
+              <div className="flex-1 flex flex-col justify-center">
+                <div className="text-center text-white/80 text-sm">
+                  Not yet set up
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="text-center">
+                <div className="text-white/60 text-sm">
+                  Contact admin
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function FolderCard({ folder, currentPath }: { folder: ShiurFolder; currentPath: string[] }) {
   const path = [...currentPath, folder.id].join('/');
   const shiurCount = countShiurimRecursive(folder);
@@ -177,11 +312,11 @@ function FolderCard({ folder, currentPath }: { folder: ShiurFolder; currentPath:
 
   return (
     <Link href={`/shiurim?path=${path}`}>
-      <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow p-6 cursor-pointer group">
-        <div className="flex items-start gap-4">
-          <div className="p-3 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+      <div className="bg-primary rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6 cursor-pointer group hover:scale-105 transform">
+        <div className="flex items-center gap-4">
+          <div className="p-4 bg-accent/20 rounded-xl group-hover:bg-accent/30 transition-colors">
             <svg
-              className="w-8 h-8 text-primary"
+              className="w-10 h-10 text-accent"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -195,20 +330,35 @@ function FolderCard({ folder, currentPath }: { folder: ShiurFolder; currentPath:
             </svg>
           </div>
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-primary transition-colors">
+            <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-accent transition-colors">
               {folder.name}
             </h3>
-            <div className="text-sm text-gray-600 space-y-1">
+            <div className="flex items-center gap-4 text-sm text-white/70">
               {subfolderCount > 0 && (
-                <p>{subfolderCount} {subfolderCount === 1 ? 'folder' : 'folders'}</p>
+                <div className="flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+                  </svg>
+                  <span>{subfolderCount} {subfolderCount === 1 ? 'folder' : 'folders'}</span>
+                </div>
               )}
               {shiurCount > 0 && (
-                <p>{shiurCount} {shiurCount === 1 ? 'shiur' : 'shiurim'}</p>
+                <div className="flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" />
+                  </svg>
+                  <span>{shiurCount} {shiurCount === 1 ? 'shiur' : 'shiurim'}</span>
+                </div>
               )}
               {subfolderCount === 0 && shiurCount === 0 && (
-                <p className="text-gray-400">Empty folder</p>
+                <p className="text-white/50">Empty folder</p>
               )}
             </div>
+          </div>
+          <div className="text-white/60 group-hover:text-accent transition-colors">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </div>
         </div>
       </div>
@@ -224,11 +374,11 @@ function ShiurRow({ shiur }: { shiur: ShiurRecording }) {
   });
 
   return (
-    <div className="bg-gray-50 rounded-lg p-4">
+    <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
       <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-semibold text-gray-900">{shiur.title}</h3>
-          <span className="text-sm text-gray-500">{recordedDate}</span>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xl font-semibold text-primary">{shiur.title}</h3>
+          <span className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">{recordedDate}</span>
         </div>
       </div>
       <AudioPlayer

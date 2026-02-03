@@ -25,6 +25,7 @@ export default function AdminShiurimPage() {
   // Folder form state
   const [newFolderName, setNewFolderName] = useState('');
   const [folderCreating, setFolderCreating] = useState(false);
+  const [migrating, setMigrating] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -89,9 +90,64 @@ export default function AdminShiurimPage() {
       if (res.ok) {
         const data = await res.json();
         setLibrary(data);
+        
+        // Auto-create category folders if they don't exist
+        await ensureCategoryFolders(data);
       }
     } catch (error) {
       console.error('Failed to load library:', error);
+    }
+  };
+
+  const ensureCategoryFolders = async (currentLibrary: ShiurimLibrary) => {
+    const categoryFolders = ['gemara', 'sefarim', 'shmoozim'];
+    const existingFolderIds = currentLibrary.folders.map(f => f.id.toLowerCase());
+
+    for (const category of categoryFolders) {
+      const exists = existingFolderIds.some(id => id.startsWith(category));
+      if (!exists) {
+        // Create the category folder
+        const capitalizedName = category.charAt(0).toUpperCase() + category.slice(1);
+        await fetch('/api/admin/folders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: capitalizedName,
+            parentPath: [],
+          }),
+        });
+      }
+    }
+  };
+
+  const isCategoryFolder = (folderId: string): boolean => {
+    const categoryFolders = ['gemara', 'sefarim', 'shmoozim'];
+    return categoryFolders.some(cat => folderId.toLowerCase().startsWith(cat));
+  };
+
+  const handleMigrateFolders = async () => {
+    if (!confirm('This will move the Pesachim folder to Gemara and create the three category folders. Continue?')) {
+      return;
+    }
+
+    setMigrating(true);
+    try {
+      const res = await fetch('/api/admin/migrate-folders', {
+        method: 'POST',
+      });
+
+      const data = await res.json();
+      
+      if (res.ok) {
+        showMessage('success', data.message || 'Migration completed successfully');
+        await loadLibrary();
+      } else {
+        showMessage('error', data.error || 'Migration failed');
+      }
+    } catch (error) {
+      showMessage('error', 'Failed to migrate folders');
+    } finally {
+      setMigrating(false);
     }
   };
 
@@ -443,28 +499,38 @@ export default function AdminShiurimPage() {
                 <p className="text-gray-500">No folders yet</p>
               ) : (
                 <div className="space-y-2">
-                  {displayFolders.map((folder) => (
-                    <div key={folder.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <button
-                        onClick={() => setCurrentPath([...currentPath, folder.id])}
-                        className="flex items-center gap-2 flex-1 text-left hover:text-primary transition-colors"
-                      >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-                        </svg>
-                        <span className="font-medium">{folder.name}</span>
-                      </button>
-                      <button
-                        onClick={() => handleDeleteFolder([...currentPath, folder.id])}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
-                        title="Delete folder"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
+                  {displayFolders.map((folder) => {
+                    const isCategory = currentPath.length === 0 && isCategoryFolder(folder.id);
+                    return (
+                      <div key={folder.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <button
+                          onClick={() => setCurrentPath([...currentPath, folder.id])}
+                          className="flex items-center gap-2 flex-1 text-left hover:text-primary transition-colors"
+                        >
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+                          </svg>
+                          <span className="font-medium">{folder.name}</span>
+                          {isCategory && (
+                            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                              Category
+                            </span>
+                          )}
+                        </button>
+                        {!isCategory && (
+                          <button
+                            onClick={() => handleDeleteFolder([...currentPath, folder.id])}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                            title="Delete folder"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

@@ -73,6 +73,18 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
+    // Prevent deletion of category folders at root level
+    const categoryFolders = ['gemara', 'sefarim', 'shmoozim'];
+    if (folderPath.length === 1) {
+      const folderId = folderPath[0].toLowerCase();
+      if (categoryFolders.some(cat => folderId.startsWith(cat))) {
+        return NextResponse.json(
+          { error: 'Cannot delete category folders (Gemara, Sefarim, Shmoozim)' },
+          { status: 403 }
+        );
+      }
+    }
+
     // Delete folder and get all shiurim that were deleted
     const deletedShiurim = await deleteFolder(folderPath);
 

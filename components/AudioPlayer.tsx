@@ -102,33 +102,28 @@ export default function AudioPlayer({ audioUrl, title, onDownload }: AudioPlayer
   };
 
   return (
-    <div className="w-full bg-white rounded-lg shadow-md p-4">
+    <div className="w-full bg-primary rounded-xl shadow-lg p-6">
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
-      
-      {/* Title */}
-      <div className="mb-3">
-        <h3 className="font-semibold text-gray-900">{title}</h3>
-      </div>
 
       {/* Play/Pause Button */}
-      <div className="flex items-center gap-4 mb-3">
+      <div className="flex items-center gap-4 mb-4">
         <button
           onClick={togglePlay}
           disabled={isLoading}
-          className="w-12 h-12 flex items-center justify-center rounded-full bg-primary text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
+          className="w-14 h-14 flex items-center justify-center rounded-full bg-white text-primary hover:bg-white/90 transition-colors disabled:opacity-50 shadow-md"
           aria-label={isPlaying ? 'Pause' : 'Play'}
         >
           {isLoading ? (
-            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+            <svg className="animate-spin h-6 w-6" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
           ) : isPlaying ? (
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
               <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
             </svg>
           ) : (
-            <svg className="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
             </svg>
           )}
@@ -136,7 +131,7 @@ export default function AudioPlayer({ audioUrl, title, onDownload }: AudioPlayer
 
         {/* Time Display */}
         <div className="flex-1">
-          <div className="flex justify-between text-sm text-gray-600 mb-1">
+          <div className="flex justify-between text-sm text-white/80 mb-2 font-medium">
             <span>{formatTime(currentTime)}</span>
             <span>{formatTime(duration)}</span>
           </div>
@@ -148,16 +143,16 @@ export default function AudioPlayer({ audioUrl, title, onDownload }: AudioPlayer
             max={duration || 0}
             value={currentTime}
             onChange={handleSeek}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+            className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-accent"
           />
         </div>
       </div>
 
       {/* Controls */}
-      <div className="flex items-center gap-4 text-sm">
+      <div className="flex items-center gap-4 text-sm flex-wrap">
         {/* Volume Control */}
         <div className="flex items-center gap-2">
-          <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-white/80" fill="currentColor" viewBox="0 0 24 24">
             <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
           </svg>
           <input
@@ -167,23 +162,23 @@ export default function AudioPlayer({ audioUrl, title, onDownload }: AudioPlayer
             step="0.01"
             value={volume}
             onChange={handleVolumeChange}
-            className="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+            className="w-20 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-accent"
             aria-label="Volume"
           />
         </div>
 
         {/* Playback Speed */}
         <div className="flex items-center gap-1">
-          <span className="text-gray-600">Speed:</span>
+          <span className="text-white/80">Speed:</span>
           {[1, 1.25, 1.5, 2].map((rate) => (
             <button
               key={rate}
               onClick={() => handlePlaybackRateChange(rate)}
-              className={`px-2 py-1 rounded ${
+              className={`px-3 py-1 rounded-lg font-medium transition-colors ${
                 playbackRate === rate
-                  ? 'bg-primary text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              } transition-colors`}
+                  ? 'bg-accent text-white shadow-md'
+                  : 'bg-white/20 text-white/90 hover:bg-white/30'
+              }`}
             >
               {rate}x
             </button>
@@ -193,7 +188,7 @@ export default function AudioPlayer({ audioUrl, title, onDownload }: AudioPlayer
         {/* Download Button */}
         <button
           onClick={handleDownload}
-          className="ml-auto px-4 py-2 bg-secondary text-white rounded hover:bg-secondary/90 transition-colors flex items-center gap-2"
+          className="ml-auto px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors flex items-center gap-2 font-medium"
           aria-label="Download"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
