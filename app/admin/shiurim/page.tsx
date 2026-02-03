@@ -404,8 +404,14 @@ export default function AdminShiurimPage() {
       {/* Header */}
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary">Admin</h1>
+          <h1 className="text-2xl font-bold text-primary">Admin - Shiurim</h1>
           <div className="flex items-center gap-3">
+            <Link
+              href="/admin/events"
+              className="px-4 py-2 text-primary hover:text-secondary transition-colors font-medium"
+            >
+              Events
+            </Link>
             <Link
               href="/"
               className="px-4 py-2 text-primary hover:text-secondary transition-colors font-medium flex items-center gap-2"

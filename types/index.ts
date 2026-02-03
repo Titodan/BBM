@@ -58,3 +58,26 @@ export interface ShiurFolder {
 export interface ShiurimLibrary {
   folders: ShiurFolder[];
 }
+
+// Events Types
+export interface Event {
+  id: string;
+  title: string;
+  date: string; // ISO 8601 format
+  posterUrl: string; // InstantDB file URL
+  price: number; // 0 for free events, cents for paid events (e.g., 1000 = $10)
+  published: boolean;
+  createdDate: string;
+}
+
+export interface EventRegistration {
+  id: string;
+  eventId: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  registeredAt: string;
+  paid: boolean;
+  stripeSessionId?: string; // For paid events
+}

@@ -39,6 +39,12 @@ export default function Navbar() {
               Shiurim
             </Link>
             <Link
+              href="/events"
+              className="text-primary hover:text-secondary transition-colors font-medium"
+            >
+              Events
+            </Link>
+            <Link
               href="/#schedule"
               className="text-primary hover:text-secondary transition-colors font-medium"
             >
@@ -99,6 +105,13 @@ export default function Navbar() {
                 className="text-primary hover:text-secondary transition-colors font-medium py-2"
               >
                 Shiurim
+              </Link>
+              <Link
+                href="/events"
+                onClick={() => setIsMenuOpen(false)}
+                className="text-primary hover:text-secondary transition-colors font-medium py-2"
+              >
+                Events
               </Link>
               <Link
                 href="/#schedule"

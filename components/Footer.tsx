@@ -50,7 +50,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="#schedule"
+                  href="/#schedule"
                   className="text-gray-700 hover:text-accent transition-colors"
                 >
                   Schedule
@@ -58,10 +58,10 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="#rabbis"
+                  href="/#rosh-beit-midrash"
                   className="text-gray-700 hover:text-accent transition-colors"
                 >
-                  Our Rabbanim
+                  Rabbanim
                 </Link>
               </li>
               <li>
