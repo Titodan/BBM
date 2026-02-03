@@ -3,8 +3,8 @@ import type { InstantRules } from "@instantdb/react";
 const rules = {
   events: {
     allow: {
-      // Everyone can read events
-      read: "true",
+      // Everyone can view events
+      view: "true",
       // Anyone can create/update/delete (admin auth is handled by Next.js session)
       create: "true",
       update: "true",
@@ -13,8 +13,8 @@ const rules = {
   },
   registrations: {
     allow: {
-      // Everyone can read registrations
-      read: "true",
+      // Everyone can view registrations
+      view: "true",
       // Anyone can create registrations (for public sign-ups)
       create: "true",
       // Anyone can update (for webhook updates)
