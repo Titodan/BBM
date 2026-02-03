@@ -4,6 +4,7 @@ import AudioPlayer from '@/components/AudioPlayer';
 import { getShiurimLibrary, getFolderByPath } from '@/lib/shiurim-data';
 import { ShiurFolder, ShiurRecording } from '@/types';
 import Link from 'next/link';
+import { memo } from 'react';
 
 interface PageProps {
   searchParams: Promise<{ path?: string }>;
@@ -44,7 +45,7 @@ export default async function ShiurimPage({ searchParams }: PageProps) {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <h1 className="text-4xl font-bold text-primary mb-4">Folder Not Found</h1>
-              <Link href="/shiurim" className="text-secondary hover:underline">
+              <Link href="/shiurim" className="text-secondary hover:underline" prefetch={true}>
                 Return to Shiurim Home
               </Link>
             </div>
@@ -75,6 +76,7 @@ export default async function ShiurimPage({ searchParams }: PageProps) {
                   <Link
                     href="/shiurim"
                     className="text-gray-700 hover:text-primary transition-colors font-medium"
+                    prefetch={true}
                   >
                     Shiurim
                   </Link>
@@ -104,6 +106,7 @@ export default async function ShiurimPage({ searchParams }: PageProps) {
                           <Link
                             href={`/shiurim?path=${path}`}
                             className="ml-1 text-gray-700 hover:text-primary transition-colors md:ml-2"
+                            prefetch={true}
                           >
                             {folder.name}
                           </Link>
@@ -233,6 +236,7 @@ function CategorySections({ folders }: { folders: ShiurFolder[] }) {
             <Link
               key={category.id}
               href={`/shiurim?path=${folder.id}`}
+              prefetch={true}
             >
               <div className="bg-primary rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-10 cursor-pointer group h-96 flex flex-col justify-between">
                 {/* Content */}
@@ -305,13 +309,13 @@ function CategorySections({ folders }: { folders: ShiurFolder[] }) {
   );
 }
 
-function FolderCard({ folder, currentPath }: { folder: ShiurFolder; currentPath: string[] }) {
+const FolderCard = memo(function FolderCard({ folder, currentPath }: { folder: ShiurFolder; currentPath: string[] }) {
   const path = [...currentPath, folder.id].join('/');
   const shiurCount = countShiurimRecursive(folder);
   const subfolderCount = folder.folders.length;
 
   return (
-    <Link href={`/shiurim?path=${path}`}>
+    <Link href={`/shiurim?path=${path}`} prefetch={true}>
       <div className="bg-primary rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6 cursor-pointer group hover:scale-105 transform">
         <div className="flex items-center gap-4">
           <div className="p-4 bg-accent/20 rounded-xl group-hover:bg-accent/30 transition-colors">
@@ -364,9 +368,9 @@ function FolderCard({ folder, currentPath }: { folder: ShiurFolder; currentPath:
       </div>
     </Link>
   );
-}
+});
 
-function ShiurRow({ shiur }: { shiur: ShiurRecording }) {
+const ShiurRow = memo(function ShiurRow({ shiur }: { shiur: ShiurRecording }) {
   const recordedDate = new Date(shiur.recordedDate).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -387,7 +391,7 @@ function ShiurRow({ shiur }: { shiur: ShiurRecording }) {
       />
     </div>
   );
-}
+});
 
 function countShiurimRecursive(folder: ShiurFolder): number {
   let count = folder.shiurim.length;

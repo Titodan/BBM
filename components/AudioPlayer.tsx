@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, memo } from 'react';
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -8,7 +8,7 @@ interface AudioPlayerProps {
   onDownload?: () => void;
 }
 
-export default function AudioPlayer({ audioUrl, title, onDownload }: AudioPlayerProps) {
+function AudioPlayer({ audioUrl, title, onDownload }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -16,12 +16,22 @@ export default function AudioPlayer({ audioUrl, title, onDownload }: AudioPlayer
   const [volume, setVolume] = useState(1);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const rafRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const updateTime = () => setCurrentTime(audio.currentTime);
+    // Throttle time updates using requestAnimationFrame to reduce re-renders
+    const updateTime = () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+      rafRef.current = requestAnimationFrame(() => {
+        setCurrentTime(audio.currentTime);
+      });
+    };
+
     const updateDuration = () => setDuration(audio.duration);
     const handleEnded = () => setIsPlaying(false);
     const handleLoadStart = () => setIsLoading(true);
@@ -34,6 +44,9 @@ export default function AudioPlayer({ audioUrl, title, onDownload }: AudioPlayer
     audio.addEventListener('canplay', handleCanPlay);
 
     return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
       audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('loadedmetadata', updateDuration);
       audio.removeEventListener('ended', handleEnded);
@@ -114,7 +127,7 @@ export default function AudioPlayer({ audioUrl, title, onDownload }: AudioPlayer
   };
 
   return (
-    <div className="w-full bg-primary rounded-xl shadow-lg p-6">
+    <div className="w-full bg-primary rounded-xl shadow-lg p-6" onClick={(e) => e.stopPropagation()}>
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
 
       {/* Play/Pause Button */}
@@ -235,3 +248,5 @@ export default function AudioPlayer({ audioUrl, title, onDownload }: AudioPlayer
     </div>
   );
 }
+
+export default memo(AudioPlayer);
