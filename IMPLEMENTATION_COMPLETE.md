@@ -61,19 +61,17 @@ The following environment variables have been set up in `.env.local`:
 
 ```bash
 # InstantDB
-NEXT_PUBLIC_INSTANTDB_APP_ID=0a72ba0c-1e03-4974-a076-07967ff37117
+NEXT_PUBLIC_INSTANTDB_APP_ID=your_instantdb_app_id
 
 # Stripe (Test Keys)
-# Add your Stripe keys to .env.local (do not commit them to git)
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=
+STRIPE_WEBHOOK_SECRET=whsec_...
 
 # R2 (existing, for shiurim)
-# Add your R2 credentials to .env.local (do not commit them to git)
-R2_ACCOUNT_ID=...
-R2_ACCESS_KEY_ID=...
-R2_SECRET_ACCESS_KEY=...
+R2_ACCOUNT_ID=your_r2_account_id
+R2_ACCESS_KEY_ID=your_r2_access_key
+R2_SECRET_ACCESS_KEY=your_r2_secret_key
 ```
 
 **Note:** You still need to add `INSTANTDB_ADMIN_TOKEN` and `STRIPE_WEBHOOK_SECRET` (see next steps).
