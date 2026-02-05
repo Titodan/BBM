@@ -127,7 +127,7 @@ function AudioPlayer({ audioUrl, title, onDownload }: AudioPlayerProps) {
   };
 
   return (
-    <div className="w-full bg-primary rounded-xl shadow-lg p-6" onClick={(e) => e.stopPropagation()}>
+    <div className="w-full max-w-7xl mx-auto bg-primary rounded-xl shadow-lg p-6" onClick={(e) => e.stopPropagation()}>
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
 
       {/* Play/Pause Button */}
@@ -135,7 +135,7 @@ function AudioPlayer({ audioUrl, title, onDownload }: AudioPlayerProps) {
         {/* Skip Backward Button */}
         <button
           onClick={skipBackward}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
+          className="w-11 h-11 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
           aria-label="Skip backward 10 seconds"
         >
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -160,7 +160,7 @@ function AudioPlayer({ audioUrl, title, onDownload }: AudioPlayerProps) {
               <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
             </svg>
           ) : (
-            <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
             </svg>
           )}
@@ -169,7 +169,7 @@ function AudioPlayer({ audioUrl, title, onDownload }: AudioPlayerProps) {
         {/* Skip Forward Button */}
         <button
           onClick={skipForward}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
+          className="w-11 h-11 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
           aria-label="Skip forward 10 seconds"
         >
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -191,7 +191,7 @@ function AudioPlayer({ audioUrl, title, onDownload }: AudioPlayerProps) {
             max={duration || 0}
             value={currentTime}
             onChange={handleSeek}
-            className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-accent"
+            className="w-full h-3 bg-white/20 rounded-lg appearance-none cursor-pointer accent-accent"
           />
         </div>
       </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ShiurimLibrary, ShiurFolder, ShiurRecording } from '@/types';
@@ -66,12 +67,34 @@ function DroppableArea({
     id: `${type}-${id}`,
   });
 
+  // For breadcrumbs, we want the drop zone visible and highlight on hover
+  if (type === 'breadcrumb') {
+    return (
+      <div
+        ref={setNodeRef}
+        className={`inline-flex ${isOver ? 'bg-blue-100 rounded' : ''}`}
+      >
+        {children}
+      </div>
+    );
+  }
+
+  // For folders and shiurim, add ring on hover
+  const ringClasses = isOver ? 'ring-2 ring-blue-500 ring-offset-2 rounded' : '';
+
+  // Clone children to add ring classes when dragging over
+  const childrenWithRing = React.Children.map(children, (child) => {
+    if (React.isValidElement(child)) {
+      return React.cloneElement(child as React.ReactElement<any>, {
+        className: `${(child as React.ReactElement<any>).props.className || ''} ${ringClasses}`.trim(),
+      });
+    }
+    return child;
+  });
+
   return (
-    <div
-      ref={setNodeRef}
-      className={isOver ? 'ring-2 ring-blue-500 ring-offset-2 rounded' : ''}
-    >
-      {children}
+    <div ref={setNodeRef}>
+      {childrenWithRing || children}
     </div>
   );
 }
@@ -1170,107 +1193,40 @@ export default function AdminShiurimPage() {
           ) : (
             <div className="p-4">
               <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {displayFolders.map((folder) => {
-                      const isCategory = currentPath.length === 0 && isCategoryFolder(folder.id);
-                      const isRenaming = renamingItem?.type === 'folder' && renamingItem.id === folder.id;
-                      const isDragging = activeType === 'folder' && activeId === folder.id;
+                {/* Header Row */}
+                <div className="grid grid-cols-12 bg-gray-50 border-b border-gray-200 px-4 py-3">
+                  <div className="col-span-5">
+                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Name</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Type</span>
+                  </div>
+                  <div className="col-span-3">
+                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Date</span>
+                  </div>
+                  <div className="col-span-2 text-right">
+                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</span>
+                  </div>
+                </div>
 
-                      return (
-                        <DroppableArea key={folder.id} id={folder.id} type="folder">
-                          <DraggableItem id={folder.id} type="folder" isDragging={isDragging}>
-                            <tr
-                              className="group hover:bg-gray-50 transition-colors cursor-move"
-                              onDoubleClick={() => !isCategory && handleDoubleClick('folder', folder.id, folder.name)}
-                            >
-                              <td className="px-4 py-3">
-                                <div className="flex items-center gap-2">
-                                  <svg className="w-5 h-5 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-                                  </svg>
-                                  {isRenaming ? (
-                                    <input
-                                      ref={renameInputRef}
-                                      type="text"
-                                      value={renameValue}
-                                      onChange={(e) => setRenameValue(e.target.value)}
-                                      onBlur={handleRename}
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                          handleRename();
-                                        } else if (e.key === 'Escape') {
-                                          cancelRename();
-                                        }
-                                      }}
-                                      className="flex-1 text-sm border border-blue-500 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                      onClick={(e) => e.stopPropagation()}
-                                    />
-                                  ) : (
-                                    <button
-                                      onClick={() => setCurrentPath([...currentPath, folder.id])}
-                                      className="text-sm font-medium text-gray-900 hover:text-primary text-left"
-                                    >
-                                      {folder.name}
-                                    </button>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className="text-sm text-gray-500">Folder</span>
-                                {isCategory && (
-                                  <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">Category</span>
-                                )}
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className="text-sm text-gray-500">
-                                  {new Date(folder.createdDate).toLocaleDateString()}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 text-right">
-                                {!isCategory && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteFolder([...currentPath, folder.id]);
-                                    }}
-                                    className="opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-800 transition-opacity p-1"
-                                    title="Delete folder"
-                                  >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                  </button>
-                                )}
-                              </td>
-                            </tr>
-                          </DraggableItem>
-                        </DroppableArea>
-                      );
-                    })}
+                {/* Rows */}
+                <div className="divide-y divide-gray-200">
+                  {displayFolders.map((folder) => {
+                    const isCategory = currentPath.length === 0 && isCategoryFolder(folder.id);
+                    const isRenaming = renamingItem?.type === 'folder' && renamingItem.id === folder.id;
+                    const isDragging = activeType === 'folder' && activeId === folder.id;
 
-                    {displayShiurim.map((shiur) => {
-                      const isRenaming = renamingItem?.type === 'shiur' && renamingItem.id === shiur.id;
-                      const isDragging = activeType === 'shiur' && activeId === shiur.id;
-
-                      return (
-                        <DraggableItem key={shiur.id} id={shiur.id} type="shiur" isDragging={isDragging}>
-                          <tr
-                            className="group hover:bg-gray-50 transition-colors cursor-move"
-                            onDoubleClick={() => handleDoubleClick('shiur', shiur.id, shiur.title)}
+                    return (
+                      <DroppableArea key={folder.id} id={folder.id} type="folder">
+                        <DraggableItem id={folder.id} type="folder" isDragging={isDragging}>
+                          <div
+                            className="grid grid-cols-12 group hover:bg-gray-50 transition-colors cursor-move px-4 py-3 items-center"
+                            onDoubleClick={() => !isCategory && handleDoubleClick('folder', folder.id, folder.name)}
                           >
-                            <td className="px-4 py-3">
+                            <div className="col-span-5">
                               <div className="flex items-center gap-2">
-                                <svg className="w-5 h-5 text-purple-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
+                                <svg className="w-5 h-5 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
                                 </svg>
                                 {isRenaming ? (
                                   <input
@@ -1286,42 +1242,116 @@ export default function AdminShiurimPage() {
                                         cancelRename();
                                       }
                                     }}
-                                    className="flex-1 text-sm border border-purple-500 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                                    className="flex-1 text-sm border border-blue-500 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                     onClick={(e) => e.stopPropagation()}
                                   />
                                 ) : (
-                                  <span className="text-sm font-medium text-gray-900">{shiur.title}</span>
+                                  <button
+                                    onClick={() => setCurrentPath([...currentPath, folder.id])}
+                                    className="text-sm font-medium text-gray-900 hover:text-primary text-left"
+                                  >
+                                    {folder.name}
+                                  </button>
                                 )}
                               </div>
-                            </td>
-                            <td className="px-4 py-3">
-                              <span className="text-sm text-gray-500">Audio</span>
-                            </td>
-                            <td className="px-4 py-3">
+                            </div>
+                            <div className="col-span-2">
+                              <span className="text-sm text-gray-500">Folder</span>
+                              {isCategory && (
+                                <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">Category</span>
+                              )}
+                            </div>
+                            <div className="col-span-3">
                               <span className="text-sm text-gray-500">
-                                {new Date(shiur.recordedDate).toLocaleDateString()}
+                                {new Date(folder.createdDate).toLocaleDateString()}
                               </span>
-                            </td>
-                            <td className="px-4 py-3 text-right">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteShiur(shiur.id);
-                                }}
-                                className="opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-800 transition-opacity p-1"
-                                title="Delete shiur"
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
-                            </td>
-                          </tr>
+                            </div>
+                            <div className="col-span-2 text-right">
+                              {!isCategory && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteFolder([...currentPath, folder.id]);
+                                  }}
+                                  className="opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-800 transition-opacity p-1"
+                                  title="Delete folder"
+                                >
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
+                          </div>
                         </DraggableItem>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                      </DroppableArea>
+                    );
+                  })}
+
+                  {displayShiurim.map((shiur) => {
+                    const isRenaming = renamingItem?.type === 'shiur' && renamingItem.id === shiur.id;
+                    const isDragging = activeType === 'shiur' && activeId === shiur.id;
+
+                    return (
+                      <DraggableItem key={shiur.id} id={shiur.id} type="shiur" isDragging={isDragging}>
+                        <div
+                          className="grid grid-cols-12 group hover:bg-gray-50 transition-colors cursor-move px-4 py-3 items-center"
+                          onDoubleClick={() => handleDoubleClick('shiur', shiur.id, shiur.title)}
+                        >
+                          <div className="col-span-5">
+                            <div className="flex items-center gap-2">
+                              <svg className="w-5 h-5 text-purple-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
+                              </svg>
+                              {isRenaming ? (
+                                <input
+                                  ref={renameInputRef}
+                                  type="text"
+                                  value={renameValue}
+                                  onChange={(e) => setRenameValue(e.target.value)}
+                                  onBlur={handleRename}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      handleRename();
+                                    } else if (e.key === 'Escape') {
+                                      cancelRename();
+                                    }
+                                  }}
+                                  className="flex-1 text-sm border border-purple-500 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              ) : (
+                                <span className="text-sm font-medium text-gray-900">{shiur.title}</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-sm text-gray-500">Audio</span>
+                          </div>
+                          <div className="col-span-3">
+                            <span className="text-sm text-gray-500">
+                              {new Date(shiur.recordedDate).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div className="col-span-2 text-right">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteShiur(shiur.id);
+                              }}
+                              className="opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-800 transition-opacity p-1"
+                              title="Delete shiur"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </DraggableItem>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}
