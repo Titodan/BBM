@@ -1,9 +1,80 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ShiurimLibrary, ShiurFolder, ShiurRecording } from '@/types';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+  useDraggable,
+  useDroppable,
+} from '@dnd-kit/core';
+
+// Draggable Item Component
+function DraggableItem({
+  id,
+  type,
+  children,
+  isDragging,
+}: {
+  id: string;
+  type: 'folder' | 'shiur';
+  children: React.ReactNode;
+  isDragging: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: `${type}-${id}`,
+  });
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+      }
+    : undefined;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className={isDragging ? 'opacity-50' : ''}
+    >
+      {children}
+    </div>
+  );
+}
+
+// Droppable Area Component
+function DroppableArea({
+  id,
+  type,
+  children,
+}: {
+  id: string;
+  type: 'folder' | 'shiur';
+  children: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `${type}-${id}`,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={isOver ? 'ring-2 ring-blue-500 ring-offset-2' : ''}
+    >
+      {children}
+    </div>
+  );
+}
 
 export default function AdminShiurimPage() {
   const router = useRouter();
@@ -21,11 +92,38 @@ export default function AdminShiurimPage() {
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadDate, setUploadDate] = useState(new Date().toISOString().split('T')[0]);
   const [uploadProgress, setUploadProgress] = useState(false);
+  const [showUploadForm, setShowUploadForm] = useState(false);
 
   // Folder form state
   const [newFolderName, setNewFolderName] = useState('');
   const [folderCreating, setFolderCreating] = useState(false);
   const [migrating, setMigrating] = useState(false);
+  const [showFolderForm, setShowFolderForm] = useState(false);
+
+  // Drag and drop state
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeType, setActiveType] = useState<'folder' | 'shiur' | null>(null);
+  
+  // Rename state
+  const [renamingItem, setRenamingItem] = useState<{
+    type: 'folder' | 'shiur';
+    id: string;
+    currentName: string;
+  } | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const renameInputRef = useRef<HTMLInputElement>(null);
+  
+  // View mode
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px of movement before drag starts
+      },
+    })
+  );
 
   useEffect(() => {
     checkAuth();
@@ -36,6 +134,12 @@ export default function AdminShiurimPage() {
       loadLibrary();
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (renamingItem) {
+      setTimeout(() => renameInputRef.current?.select(), 0);
+    }
+  }, [renamingItem]);
 
   const checkAuth = async () => {
     // Check if already authenticated by trying to access the library endpoint
@@ -174,6 +278,7 @@ export default function AdminShiurimPage() {
       if (res.ok) {
         showMessage('success', 'Folder created successfully');
         setNewFolderName('');
+        setShowFolderForm(false);
         await loadLibrary();
       } else {
         const data = await res.json();
@@ -252,6 +357,7 @@ export default function AdminShiurimPage() {
         setUploadFile(null);
         setUploadTitle('');
         setUploadDate(new Date().toISOString().split('T')[0]);
+        setShowUploadForm(false);
         await loadLibrary();
         // Reset file input
         const fileInput = document.getElementById('file-upload') as HTMLInputElement;
@@ -318,6 +424,176 @@ export default function AdminShiurimPage() {
     }
   };
 
+  // Drag and drop handlers
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const id = active.id as string;
+    
+    if (id.startsWith('folder-')) {
+      setActiveType('folder');
+      setActiveId(id.replace('folder-', ''));
+    } else if (id.startsWith('shiur-')) {
+      setActiveType('shiur');
+      setActiveId(id.replace('shiur-', ''));
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over) {
+      setActiveId(null);
+      setActiveType(null);
+      return;
+    }
+
+    const activeIdStr = (active.id as string).replace(/^(folder|shiur)-/, '');
+    const overIdStr = (over.id as string).replace(/^(folder|shiur)-/, '');
+
+    // Don't do anything if dropped on itself
+    if (activeIdStr === overIdStr) {
+      setActiveId(null);
+      setActiveType(null);
+      return;
+    }
+
+    try {
+      if (activeType === 'shiur') {
+        // Moving a shiur
+        // Check if dropped on a folder
+        if ((over.id as string).startsWith('folder-')) {
+          const targetFolderId = overIdStr;
+          const targetPath = [...currentPath, targetFolderId];
+          
+          const res = await fetch('/api/admin/move', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'shiur',
+              itemId: activeIdStr,
+              sourcePath: currentPath,
+              targetPath: targetPath,
+            }),
+          });
+
+          if (res.ok) {
+            showMessage('success', 'Shiur moved successfully');
+            await loadLibrary();
+          } else {
+            const data = await res.json();
+            showMessage('error', data.error || 'Failed to move shiur');
+          }
+        }
+      } else if (activeType === 'folder') {
+        // Moving a folder
+        // Check if dropped on another folder or root
+        if ((over.id as string).startsWith('folder-')) {
+          const targetFolderId = overIdStr;
+          const sourcePath = [...currentPath, activeIdStr];
+          const targetPath = [...currentPath, targetFolderId];
+          
+          const res = await fetch('/api/admin/move', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'folder',
+              sourcePath: sourcePath,
+              targetPath: targetPath,
+            }),
+          });
+
+          if (res.ok) {
+            showMessage('success', 'Folder moved successfully');
+            await loadLibrary();
+          } else {
+            const data = await res.json();
+            showMessage('error', data.error || 'Failed to move folder');
+          }
+        }
+      }
+    } catch (error) {
+      showMessage('error', 'Failed to move item');
+    }
+
+    setActiveId(null);
+    setActiveType(null);
+  };
+
+  // Rename handlers
+  const startRename = (type: 'folder' | 'shiur', id: string, currentName: string) => {
+    setRenamingItem({ type, id, currentName });
+    setRenameValue(currentName);
+  };
+
+  const cancelRename = () => {
+    setRenamingItem(null);
+    setRenameValue('');
+  };
+
+  const handleRename = async () => {
+    if (!renamingItem || !renameValue.trim()) {
+      cancelRename();
+      return;
+    }
+
+    if (renameValue === renamingItem.currentName) {
+      cancelRename();
+      return;
+    }
+
+    try {
+      if (renamingItem.type === 'folder') {
+        const folderPath = [...currentPath, renamingItem.id];
+        const res = await fetch('/api/admin/folders', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            folderPath,
+            newName: renameValue,
+          }),
+        });
+
+        if (res.ok) {
+          showMessage('success', 'Folder renamed successfully');
+          await loadLibrary();
+        } else {
+          const data = await res.json();
+          showMessage('error', data.error || 'Failed to rename folder');
+        }
+      } else if (renamingItem.type === 'shiur') {
+        const res = await fetch('/api/admin/shiurim', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            shiurId: renamingItem.id,
+            folderPath: currentPath,
+            newTitle: renameValue,
+          }),
+        });
+
+        if (res.ok) {
+          showMessage('success', 'Shiur renamed successfully');
+          await loadLibrary();
+        } else {
+          const data = await res.json();
+          showMessage('error', data.error || 'Failed to rename shiur');
+        }
+      }
+    } catch (error) {
+      showMessage('error', 'Failed to rename item');
+    }
+
+    cancelRename();
+  };
+
+  const handleDoubleClick = (type: 'folder' | 'shiur', id: string, name: string) => {
+    if (type === 'folder') {
+      startRename(type, id, name);
+    } else {
+      startRename(type, id, name);
+    }
+  };
+
   const getCurrentFolder = (): ShiurFolder | null => {
     let folders = library.folders;
     let current: ShiurFolder | null = null;
@@ -351,6 +627,10 @@ export default function AdminShiurimPage() {
   const currentFolder = getCurrentFolder();
   const displayFolders = currentFolder?.folders || library.folders;
   const displayShiurim = currentFolder?.shiurim || [];
+  const allItems = [
+    ...displayFolders.map(f => ({ type: 'folder' as const, data: f })),
+    ...displayShiurim.map(s => ({ type: 'shiur' as const, data: s })),
+  ];
 
   if (isLoading) {
     return (
@@ -400,251 +680,543 @@ export default function AdminShiurimPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary">Admin - Shiurim</h1>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/admin/events"
-              className="px-4 py-2 text-primary hover:text-secondary transition-colors font-medium"
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        {/* Header */}
+        <div className="bg-white shadow-sm border-b border-gray-200">
+          <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+            <h1 className="text-xl font-semibold text-gray-800">Shiurim Library</h1>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/admin/events"
+                className="px-3 py-1.5 text-sm text-gray-600 hover:text-primary transition-colors font-medium"
+              >
+                Events
+              </Link>
+              <Link
+                href="/"
+                className="px-3 py-1.5 text-sm text-gray-600 hover:text-primary transition-colors font-medium flex items-center gap-1.5"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Message Toast */}
+        {message && (
+          <div className="fixed top-4 right-4 z-50 animate-fade-in">
+            <div
+              className={`px-6 py-3 rounded-lg shadow-lg ${
+                message.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+              } text-white`}
             >
-              Events
-            </Link>
-            <Link
-              href="/"
-              className="px-4 py-2 text-primary hover:text-secondary transition-colors font-medium flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back to Website
-            </Link>
+              {message.text}
+            </div>
+          </div>
+        )}
+
+        {/* Toolbar */}
+        <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
+          {/* Breadcrumb */}
+          <nav className="flex items-center text-sm flex-1 min-w-0">
             <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              onClick={() => setCurrentPath([])}
+              className="flex items-center gap-1 text-gray-700 hover:text-primary transition-colors p-1 rounded hover:bg-gray-100"
+              title="Home"
             >
-              Logout
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+              </svg>
             </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Message Toast */}
-      {message && (
-        <div className="fixed top-4 right-4 z-50 animate-fade-in">
-          <div
-            className={`px-6 py-3 rounded-lg shadow-lg ${
-              message.type === 'success' ? 'bg-green-500' : 'bg-red-500'
-            } text-white`}
-          >
-            {message.text}
-          </div>
-        </div>
-      )}
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <nav className="flex mb-6 text-sm">
-          <button
-            onClick={() => setCurrentPath([])}
-            className="text-primary hover:underline font-medium"
-          >
-            Root
-          </button>
-          {getFolderNamesFromPath(currentPath).map((name, index) => {
-            return (
+            {getFolderNamesFromPath(currentPath).map((name, index) => (
               <span key={index} className="flex items-center">
-                <span className="mx-2 text-gray-400">/</span>
+                <svg className="w-4 h-4 mx-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                </svg>
                 <button
                   onClick={() => setCurrentPath(currentPath.slice(0, index + 1))}
-                  className="text-primary hover:underline"
+                  className="text-gray-700 hover:text-primary transition-colors px-1 py-0.5 rounded hover:bg-gray-100 truncate max-w-[150px]"
                 >
                   {name}
                 </button>
               </span>
-            );
-          })}
-        </nav>
+            ))}
+          </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column: Folder Management */}
-          <div className="space-y-6">
-            {/* Create Folder */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold text-primary mb-4">Create Folder</h2>
-              <form onSubmit={handleCreateFolder} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Folder Name
-                  </label>
-                  <input
-                    type="text"
-                    value={newFolderName}
-                    onChange={(e) => setNewFolderName(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="e.g., Pesachim 2024"
-                    required
-                  />
-                </div>
+          {/* View Mode Toggles */}
+          <div className="flex items-center gap-1 ml-4">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded ${viewMode === 'grid' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
+              title="Grid view"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded ${viewMode === 'list' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
+              title="List view"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Quick Actions Bar */}
+        <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between gap-4">
+          {/* Folder Creation */}
+          <div className="flex items-center gap-2 flex-1">
+            {showFolderForm ? (
+              <form onSubmit={handleCreateFolder} className="flex items-center gap-2 flex-1">
+                <input
+                  type="text"
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  onBlur={() => {
+                    if (!newFolderName.trim()) {
+                      setShowFolderForm(false);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setShowFolderForm(false);
+                      setNewFolderName('');
+                    }
+                  }}
+                  className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="Folder name"
+                  autoFocus
+                />
                 <button
                   type="submit"
-                  disabled={folderCreating}
-                  className="w-full bg-primary text-white py-2 rounded-lg font-bold hover:bg-primary-dark transition-colors disabled:opacity-50"
+                  disabled={folderCreating || !newFolderName.trim()}
+                  className="px-3 py-1.5 text-sm bg-primary text-white rounded hover:bg-primary-dark transition-colors disabled:opacity-50"
                 >
-                  {folderCreating ? 'Creating...' : 'Create Folder'}
+                  {folderCreating ? 'Creating...' : 'Create'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowFolderForm(false);
+                    setNewFolderName('');
+                  }}
+                  className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                >
+                  Cancel
                 </button>
               </form>
-            </div>
-
-            {/* Folder List */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold text-primary mb-4">Folders</h2>
-              {displayFolders.length === 0 ? (
-                <p className="text-gray-500">No folders yet</p>
-              ) : (
-                <div className="space-y-2">
-                  {displayFolders.map((folder) => {
-                    const isCategory = currentPath.length === 0 && isCategoryFolder(folder.id);
-                    return (
-                      <div key={folder.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <button
-                          onClick={() => setCurrentPath([...currentPath, folder.id])}
-                          className="flex items-center gap-2 flex-1 text-left hover:text-primary transition-colors"
-                        >
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-                          </svg>
-                          <span className="font-medium">{folder.name}</span>
-                          {isCategory && (
-                            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                              Category
-                            </span>
-                          )}
-                        </button>
-                        {!isCategory && (
-                          <button
-                            onClick={() => handleDeleteFolder([...currentPath, folder.id])}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
-                            title="Delete folder"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            ) : (
+              <button
+                onClick={() => setShowFolderForm(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-700 bg-gray-50 hover:bg-gray-100 rounded transition-colors border border-gray-200"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                New Folder
+              </button>
+            )}
           </div>
 
-          {/* Right Column: Upload Form */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold text-primary mb-4">Upload Shiur</h2>
-              {currentPath.length === 0 ? (
-                <div className="bg-yellow-50 text-yellow-800 px-4 py-3 rounded-lg mb-4">
-                  Please select a folder first by clicking on a folder or creating one.
-                </div>
-              ) : (
-                <div className="bg-primary/10 text-primary px-4 py-3 rounded-lg mb-4 text-sm">
-                  Uploading to: <strong>{getFolderNamesFromPath(currentPath).join(' / ')}</strong>
-                </div>
-              )}
-              
-              <form onSubmit={handleUpload} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Audio File
-                  </label>
+          {/* Upload Controls - Only show when in a folder */}
+          {currentPath.length > 0 && (
+            <div className="flex items-center gap-2">
+              {showUploadForm ? (
+                <form onSubmit={handleUpload} className="flex items-center gap-2">
                   <input
                     type="file"
                     id="file-upload"
                     accept=".mp3,.m4a,.wav,audio/*"
                     onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    required
+                    className="hidden"
                   />
-                  {uploadFile && (
-                    <p className="mt-1 text-sm text-gray-500">
-                      {(uploadFile.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Title
+                  <label
+                    htmlFor="file-upload"
+                    className="px-3 py-1.5 text-sm text-gray-700 bg-gray-50 hover:bg-gray-100 rounded transition-colors border border-gray-200 cursor-pointer"
+                  >
+                    {uploadFile ? uploadFile.name : 'Choose File'}
                   </label>
                   <input
                     type="text"
                     value={uploadTitle}
                     onChange={(e) => setUploadTitle(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="e.g., Pesachim Perek 1"
-                    required
+                    className="px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent w-48"
+                    placeholder="Shiur title"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Recorded Date
-                  </label>
                   <input
                     type="date"
                     value={uploadDate}
                     onChange={(e) => setUploadDate(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    required
+                    className="px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
-                </div>
-
+                  <button
+                    type="submit"
+                    disabled={uploadProgress || !uploadFile || !uploadTitle}
+                    className="px-3 py-1.5 text-sm bg-primary text-white rounded hover:bg-primary-dark transition-colors disabled:opacity-50"
+                  >
+                    {uploadProgress ? 'Uploading...' : 'Upload'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowUploadForm(false);
+                      setUploadFile(null);
+                      setUploadTitle('');
+                    }}
+                    className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </form>
+              ) : (
                 <button
-                  type="submit"
-                  disabled={uploadProgress || currentPath.length === 0}
-                  className="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => setShowUploadForm(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-700 bg-gray-50 hover:bg-gray-100 rounded transition-colors border border-gray-200"
                 >
-                  {uploadProgress ? 'Uploading...' : 'Upload Shiur'}
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  Upload Shiur
                 </button>
-              </form>
+              )}
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Shiurim List */}
-        {displayShiurim.length > 0 && (
-          <div className="mt-8 bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold text-primary mb-4">
-              Shiurim in Current Folder
-            </h2>
-            <div className="space-y-3">
-              {displayShiurim.map((shiur) => (
-                <div key={shiur.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">{shiur.title}</h3>
-                    <p className="text-sm text-gray-600">
-                      {new Date(shiur.recordedDate).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteShiur(shiur.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
-                    title="Delete shiur"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-              ))}
+        {/* Main Content Area */}
+        <div className="flex-1 overflow-auto">
+          {allItems.length === 0 ? (
+            <div className="flex items-center justify-center h-full py-20">
+              <div className="text-center text-gray-500">
+                <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+                <p className="text-lg font-medium">This folder is empty</p>
+                <p className="text-sm mt-1">Create a folder or upload a shiur to get started</p>
+              </div>
             </div>
-          </div>
-        )}
+          ) : viewMode === 'grid' ? (
+            <div className="p-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                {displayFolders.map((folder) => {
+                  const isCategory = currentPath.length === 0 && isCategoryFolder(folder.id);
+                  const isRenaming = renamingItem?.type === 'folder' && renamingItem.id === folder.id;
+                  const isDragging = activeType === 'folder' && activeId === folder.id;
+
+                  return (
+                    <DroppableArea key={folder.id} id={folder.id} type="folder">
+                      <DraggableItem id={folder.id} type="folder" isDragging={isDragging}>
+                        <div
+                          className="group relative flex flex-col items-center p-3 rounded-lg hover:bg-gray-100 transition-colors cursor-move"
+                          onDoubleClick={() => !isCategory && handleDoubleClick('folder', folder.id, folder.name)}
+                        >
+                          {/* Folder Icon */}
+                          <div className="relative mb-2">
+                            <svg className="w-16 h-16 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+                            </svg>
+                            {/* Delete button on hover */}
+                            {!isCategory && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteFolder([...currentPath, folder.id]);
+                                }}
+                                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs hover:bg-red-600"
+                              >
+                                ×
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Folder Name */}
+                          {isRenaming ? (
+                            <input
+                              ref={renameInputRef}
+                              type="text"
+                              value={renameValue}
+                              onChange={(e) => setRenameValue(e.target.value)}
+                              onBlur={handleRename}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleRename();
+                                } else if (e.key === 'Escape') {
+                                  cancelRename();
+                                }
+                              }}
+                              className="w-full text-center text-sm border border-blue-500 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          ) : (
+                            <span
+                              className="text-sm text-center break-words max-w-full px-1"
+                              onClick={() => setCurrentPath([...currentPath, folder.id])}
+                            >
+                              {folder.name}
+                            </span>
+                          )}
+                        </div>
+                      </DraggableItem>
+                    </DroppableArea>
+                  );
+                })}
+
+                {displayShiurim.map((shiur) => {
+                  const isRenaming = renamingItem?.type === 'shiur' && renamingItem.id === shiur.id;
+                  const isDragging = activeType === 'shiur' && activeId === shiur.id;
+
+                  return (
+                    <DraggableItem key={shiur.id} id={shiur.id} type="shiur" isDragging={isDragging}>
+                      <div
+                        className="group relative flex flex-col items-center p-3 rounded-lg hover:bg-gray-100 transition-colors cursor-move"
+                        onDoubleClick={() => handleDoubleClick('shiur', shiur.id, shiur.title)}
+                      >
+                        {/* Audio Icon */}
+                        <div className="relative mb-2">
+                          <svg className="w-16 h-16 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
+                          </svg>
+                          {/* Delete button on hover */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteShiur(shiur.id);
+                            }}
+                            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs hover:bg-red-600"
+                          >
+                            ×
+                          </button>
+                        </div>
+
+                        {/* Shiur Title */}
+                        {isRenaming ? (
+                          <input
+                            ref={renameInputRef}
+                            type="text"
+                            value={renameValue}
+                            onChange={(e) => setRenameValue(e.target.value)}
+                            onBlur={handleRename}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleRename();
+                              } else if (e.key === 'Escape') {
+                                cancelRename();
+                              }
+                            }}
+                            className="w-full text-center text-sm border border-purple-500 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <span className="text-sm text-center break-words max-w-full px-1">
+                            {shiur.title}
+                          </span>
+                        )}
+                      </div>
+                    </DraggableItem>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="p-4">
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {displayFolders.map((folder) => {
+                      const isCategory = currentPath.length === 0 && isCategoryFolder(folder.id);
+                      const isRenaming = renamingItem?.type === 'folder' && renamingItem.id === folder.id;
+                      const isDragging = activeType === 'folder' && activeId === folder.id;
+
+                      return (
+                        <DroppableArea key={folder.id} id={folder.id} type="folder">
+                          <DraggableItem id={folder.id} type="folder" isDragging={isDragging}>
+                            <tr
+                              className="group hover:bg-gray-50 transition-colors cursor-move"
+                              onDoubleClick={() => !isCategory && handleDoubleClick('folder', folder.id, folder.name)}
+                            >
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  <svg className="w-5 h-5 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+                                  </svg>
+                                  {isRenaming ? (
+                                    <input
+                                      ref={renameInputRef}
+                                      type="text"
+                                      value={renameValue}
+                                      onChange={(e) => setRenameValue(e.target.value)}
+                                      onBlur={handleRename}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          handleRename();
+                                        } else if (e.key === 'Escape') {
+                                          cancelRename();
+                                        }
+                                      }}
+                                      className="flex-1 text-sm border border-blue-500 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  ) : (
+                                    <button
+                                      onClick={() => setCurrentPath([...currentPath, folder.id])}
+                                      className="text-sm font-medium text-gray-900 hover:text-primary text-left"
+                                    >
+                                      {folder.name}
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className="text-sm text-gray-500">Folder</span>
+                                {isCategory && (
+                                  <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">Category</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className="text-sm text-gray-500">
+                                  {new Date(folder.createdDate).toLocaleDateString()}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                {!isCategory && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteFolder([...currentPath, folder.id]);
+                                    }}
+                                    className="opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-800 transition-opacity p-1"
+                                    title="Delete folder"
+                                  >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          </DraggableItem>
+                        </DroppableArea>
+                      );
+                    })}
+
+                    {displayShiurim.map((shiur) => {
+                      const isRenaming = renamingItem?.type === 'shiur' && renamingItem.id === shiur.id;
+                      const isDragging = activeType === 'shiur' && activeId === shiur.id;
+
+                      return (
+                        <DraggableItem key={shiur.id} id={shiur.id} type="shiur" isDragging={isDragging}>
+                          <tr
+                            className="group hover:bg-gray-50 transition-colors cursor-move"
+                            onDoubleClick={() => handleDoubleClick('shiur', shiur.id, shiur.title)}
+                          >
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <svg className="w-5 h-5 text-purple-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
+                                </svg>
+                                {isRenaming ? (
+                                  <input
+                                    ref={renameInputRef}
+                                    type="text"
+                                    value={renameValue}
+                                    onChange={(e) => setRenameValue(e.target.value)}
+                                    onBlur={handleRename}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        handleRename();
+                                      } else if (e.key === 'Escape') {
+                                        cancelRename();
+                                      }
+                                    }}
+                                    className="flex-1 text-sm border border-purple-500 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                ) : (
+                                  <span className="text-sm font-medium text-gray-900">{shiur.title}</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="text-sm text-gray-500">Audio</span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="text-sm text-gray-500">
+                                {new Date(shiur.recordedDate).toLocaleDateString()}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteShiur(shiur.id);
+                                }}
+                                className="opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-800 transition-opacity p-1"
+                                title="Delete shiur"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </td>
+                          </tr>
+                        </DraggableItem>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Drag Overlay */}
+        <DragOverlay>
+          {activeId && activeType ? (
+            <div className="opacity-50">
+              {activeType === 'folder' ? (
+                <div className="flex flex-col items-center p-3">
+                  <svg className="w-16 h-16 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+                  </svg>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center p-3">
+                  <svg className="w-16 h-16 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              )}
+            </div>
+          ) : null}
+        </DragOverlay>
       </div>
-    </div>
+    </DndContext>
   );
 }

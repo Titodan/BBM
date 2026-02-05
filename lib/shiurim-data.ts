@@ -258,3 +258,142 @@ function findShiurInFolders(
 
   return null;
 }
+
+/**
+ * Rename a folder
+ * @param folderPath - Path to the folder to rename
+ * @param newName - New name for the folder
+ */
+export async function renameFolder(
+  folderPath: string[],
+  newName: string
+): Promise<void> {
+  if (folderPath.length === 0) {
+    throw new Error('Cannot rename root folder');
+  }
+
+  const library = await getShiurimLibrary();
+  const folder = await navigateToFolder(library.folders, folderPath);
+  
+  if (!folder) throw new Error('Folder not found');
+  
+  folder.name = newName;
+  await saveShiurimLibrary(library);
+}
+
+/**
+ * Rename a shiur
+ * @param shiurId - ID of the shiur to rename
+ * @param folderPath - Path to the folder containing the shiur
+ * @param newTitle - New title for the shiur
+ */
+export async function renameShiur(
+  shiurId: string,
+  folderPath: string[],
+  newTitle: string
+): Promise<void> {
+  const library = await getShiurimLibrary();
+
+  if (folderPath.length === 0) {
+    throw new Error('Cannot rename shiur at root level');
+  }
+
+  const folder = await navigateToFolder(library.folders, folderPath);
+  if (!folder) throw new Error('Folder not found');
+
+  const shiur = folder.shiurim.find(s => s.id === shiurId);
+  if (!shiur) throw new Error('Shiur not found');
+
+  shiur.title = newTitle;
+  await saveShiurimLibrary(library);
+}
+
+/**
+ * Move a shiur from one folder to another
+ * @param shiurId - ID of the shiur to move
+ * @param sourcePath - Path to the source folder
+ * @param targetPath - Path to the target folder
+ */
+export async function moveShiur(
+  shiurId: string,
+  sourcePath: string[],
+  targetPath: string[]
+): Promise<void> {
+  if (sourcePath.length === 0 || targetPath.length === 0) {
+    throw new Error('Cannot move to/from root level');
+  }
+
+  const library = await getShiurimLibrary();
+
+  // Find source folder
+  const sourceFolder = await navigateToFolder(library.folders, sourcePath);
+  if (!sourceFolder) throw new Error('Source folder not found');
+
+  // Find shiur
+  const shiurIndex = sourceFolder.shiurim.findIndex(s => s.id === shiurId);
+  if (shiurIndex === -1) throw new Error('Shiur not found');
+
+  // Find target folder
+  const targetFolder = await navigateToFolder(library.folders, targetPath);
+  if (!targetFolder) throw new Error('Target folder not found');
+
+  // Move shiur
+  const [shiur] = sourceFolder.shiurim.splice(shiurIndex, 1);
+  targetFolder.shiurim.push(shiur);
+
+  await saveShiurimLibrary(library);
+}
+
+/**
+ * Move a folder from one location to another
+ * @param folderPath - Path to the folder to move
+ * @param newParentPath - Path to the new parent folder (empty array for root)
+ */
+export async function moveFolder(
+  folderPath: string[],
+  newParentPath: string[]
+): Promise<void> {
+  if (folderPath.length === 0) {
+    throw new Error('Cannot move root folder');
+  }
+
+  // Check if trying to move to itself or a descendant
+  if (newParentPath.length >= folderPath.length) {
+    const isDescendant = folderPath.every((id, i) => id === newParentPath[i]);
+    if (isDescendant) {
+      throw new Error('Cannot move folder to itself or a descendant');
+    }
+  }
+
+  const library = await getShiurimLibrary();
+
+  // Get the folder to move
+  const currentParentPath = folderPath.slice(0, -1);
+  const folderId = folderPath[folderPath.length - 1];
+
+  let currentParentFolders: ShiurFolder[];
+  if (currentParentPath.length === 0) {
+    currentParentFolders = library.folders;
+  } else {
+    const currentParent = await navigateToFolder(library.folders, currentParentPath);
+    if (!currentParent) throw new Error('Current parent folder not found');
+    currentParentFolders = currentParent.folders;
+  }
+
+  const folderIndex = currentParentFolders.findIndex(f => f.id === folderId);
+  if (folderIndex === -1) throw new Error('Folder not found');
+
+  // Remove from current location
+  const [folder] = currentParentFolders.splice(folderIndex, 1);
+
+  // Add to new location
+  if (newParentPath.length === 0) {
+    library.folders.push(folder);
+  } else {
+    const newParent = await navigateToFolder(library.folders, newParentPath);
+    if (!newParent) throw new Error('New parent folder not found');
+    newParent.folders.push(folder);
+  }
+
+  await saveShiurimLibrary(library);
+}
