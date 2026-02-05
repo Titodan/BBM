@@ -59,7 +59,7 @@ function DroppableArea({
   children,
 }: {
   id: string;
-  type: 'folder' | 'shiur';
+  type: 'folder' | 'shiur' | 'breadcrumb';
   children: React.ReactNode;
 }) {
   const { setNodeRef, isOver } = useDroppable({
@@ -69,7 +69,7 @@ function DroppableArea({
   return (
     <div
       ref={setNodeRef}
-      className={isOver ? 'ring-2 ring-blue-500 ring-offset-2' : ''}
+      className={isOver ? 'ring-2 ring-blue-500 ring-offset-2 rounded' : ''}
     >
       {children}
     </div>
@@ -88,11 +88,12 @@ export default function AdminShiurimPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Upload form state
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadFiles, setUploadFiles] = useState<File[]>([]);
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadDate, setUploadDate] = useState(new Date().toISOString().split('T')[0]);
   const [uploadProgress, setUploadProgress] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<string>('');
 
   // Folder form state
   const [newFolderName, setNewFolderName] = useState('');
@@ -293,84 +294,120 @@ export default function AdminShiurimPage() {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!uploadFile || !uploadTitle || currentPath.length === 0) {
-      showMessage('error', 'Please fill all fields and select a folder');
+    if (uploadFiles.length === 0 || currentPath.length === 0) {
+      showMessage('error', 'Please select file(s) and a folder');
       return;
     }
 
     setUploadProgress(true);
+    let successCount = 0;
+    let failCount = 0;
+
     try {
-      // Step 1: Generate unique filename
-      const timestamp = Date.now();
-      const sanitizedTitle = uploadTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      const ext = uploadFile.name.split('.').pop();
-      const fileName = `${sanitizedTitle}-${timestamp}.${ext}`;
+      // Upload files sequentially
+      for (let i = 0; i < uploadFiles.length; i++) {
+        const file = uploadFiles[i];
+        setUploadStatus(`Uploading ${i + 1} of ${uploadFiles.length}: ${file.name}...`);
 
-      // Step 2: Get presigned URL for direct upload to R2
-      const presignedRes = await fetch('/api/admin/presigned-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName,
-          contentType: uploadFile.type || 'audio/mpeg',
-        }),
-      });
+        try {
+          // For multiple files, always use filename. For single file with custom title, use that.
+          const finalTitle = uploadFiles.length === 1 && uploadTitle.trim() 
+            ? uploadTitle.trim() 
+            : file.name.replace(/\.[^/.]+$/, '');
 
-      if (!presignedRes.ok) {
-        const data = await presignedRes.json();
-        showMessage('error', data.error || 'Failed to get upload URL');
-        return;
+          // Step 1: Generate unique filename
+          const timestamp = Date.now() + i; // Add index to ensure uniqueness
+          const sanitizedTitle = finalTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          const ext = file.name.split('.').pop();
+          const fileName = `${sanitizedTitle}-${timestamp}.${ext}`;
+
+          // Step 2: Get presigned URL for direct upload to R2
+          const presignedRes = await fetch('/api/admin/presigned-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fileName,
+              contentType: file.type || 'audio/mpeg',
+            }),
+          });
+
+          if (!presignedRes.ok) {
+            failCount++;
+            continue;
+          }
+
+          const { uploadUrl } = await presignedRes.json();
+
+          // Step 3: Upload file directly to R2 using presigned URL
+          const uploadRes = await fetch(uploadUrl, {
+            method: 'PUT',
+            body: file,
+            headers: {
+              'Content-Type': file.type || 'audio/mpeg',
+            },
+          });
+
+          if (!uploadRes.ok) {
+            failCount++;
+            continue;
+          }
+
+          // Step 4: Register the upload in our system
+          const registerRes = await fetch('/api/admin/register-upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: finalTitle,
+              recordedDate: uploadDate,
+              folderPath: currentPath,
+              fileName,
+              fileSize: file.size,
+              contentType: file.type || 'audio/mpeg',
+            }),
+          });
+
+          if (registerRes.ok) {
+            successCount++;
+          } else {
+            failCount++;
+          }
+
+          // Small delay between uploads to avoid overwhelming the server
+          if (i < uploadFiles.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+        } catch (error) {
+          console.error(`Upload error for ${file.name}:`, error);
+          failCount++;
+        }
       }
 
-      const { uploadUrl } = await presignedRes.json();
-
-      // Step 3: Upload file directly to R2 using presigned URL
-      const uploadRes = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: uploadFile,
-        headers: {
-          'Content-Type': uploadFile.type || 'audio/mpeg',
-        },
-      });
-
-      if (!uploadRes.ok) {
-        showMessage('error', `Failed to upload file to storage (${uploadRes.status})`);
-        return;
-      }
-
-      // Step 4: Register the upload in our system
-      const registerRes = await fetch('/api/admin/register-upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: uploadTitle,
-          recordedDate: uploadDate,
-          folderPath: currentPath,
-          fileName,
-          fileSize: uploadFile.size,
-          contentType: uploadFile.type || 'audio/mpeg',
-        }),
-      });
-
-      if (registerRes.ok) {
-        showMessage('success', 'Shiur uploaded successfully');
-        setUploadFile(null);
-        setUploadTitle('');
-        setUploadDate(new Date().toISOString().split('T')[0]);
-        setShowUploadForm(false);
-        await loadLibrary();
-        // Reset file input
-        const fileInput = document.getElementById('file-upload') as HTMLInputElement;
-        if (fileInput) fileInput.value = '';
+      // Show summary message
+      if (successCount > 0 && failCount === 0) {
+        showMessage('success', `Successfully uploaded ${successCount} shiur${successCount > 1 ? 'im' : ''}`);
+      } else if (successCount > 0 && failCount > 0) {
+        showMessage('error', `Uploaded ${successCount} shiur${successCount > 1 ? 'im' : ''}, ${failCount} failed`);
       } else {
-        const data = await registerRes.json();
-        showMessage('error', data.error || 'Failed to register upload');
+        showMessage('error', 'All uploads failed');
       }
+
+      // Reset form
+      setUploadFiles([]);
+      setUploadTitle('');
+      setUploadDate(new Date().toISOString().split('T')[0]);
+      setShowUploadForm(false);
+      setUploadStatus('');
+      await loadLibrary();
+      
+      // Reset file input
+      const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
     } catch (error) {
       console.error('Upload error:', error);
-      showMessage('error', 'Failed to upload shiur');
+      showMessage('error', 'Failed to upload shiurim');
     } finally {
       setUploadProgress(false);
+      setUploadStatus('');
     }
   };
 
@@ -448,10 +485,10 @@ export default function AdminShiurimPage() {
     }
 
     const activeIdStr = (active.id as string).replace(/^(folder|shiur)-/, '');
-    const overIdStr = (over.id as string).replace(/^(folder|shiur)-/, '');
+    const overIdStr = over.id as string;
 
     // Don't do anything if dropped on itself
-    if (activeIdStr === overIdStr) {
+    if (active.id === over.id) {
       setActiveId(null);
       setActiveType(null);
       return;
@@ -460,55 +497,111 @@ export default function AdminShiurimPage() {
     try {
       if (activeType === 'shiur') {
         // Moving a shiur
-        // Check if dropped on a folder
-        if ((over.id as string).startsWith('folder-')) {
-          const targetFolderId = overIdStr;
-          const targetPath = [...currentPath, targetFolderId];
+        let targetPath: string[] = [];
+        
+        if (overIdStr.startsWith('folder-')) {
+          // Dropped on a folder in current view
+          const targetFolderId = overIdStr.replace('folder-', '');
+          targetPath = [...currentPath, targetFolderId];
+        } else if (overIdStr.startsWith('breadcrumb-')) {
+          // Dropped on a breadcrumb folder
+          const breadcrumbId = overIdStr.replace('breadcrumb-', '');
           
-          const res = await fetch('/api/admin/move', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              type: 'shiur',
-              itemId: activeIdStr,
-              sourcePath: currentPath,
-              targetPath: targetPath,
-            }),
-          });
-
-          if (res.ok) {
-            showMessage('success', 'Shiur moved successfully');
-            await loadLibrary();
-          } else {
-            const data = await res.json();
-            showMessage('error', data.error || 'Failed to move shiur');
+          if (breadcrumbId === 'root') {
+            // Moving to root - not allowed for shiurim
+            showMessage('error', 'Shiurim must be in a folder. Please select a folder to move to.');
+            setActiveId(null);
+            setActiveType(null);
+            return;
           }
+          
+          // Parse the breadcrumb index
+          const breadcrumbIndex = parseInt(breadcrumbId);
+          if (isNaN(breadcrumbIndex)) {
+            setActiveId(null);
+            setActiveType(null);
+            return;
+          }
+          
+          targetPath = currentPath.slice(0, breadcrumbIndex + 1);
+        } else {
+          setActiveId(null);
+          setActiveType(null);
+          return;
+        }
+        
+        // Don't move if already in target folder
+        if (JSON.stringify(targetPath) === JSON.stringify(currentPath)) {
+          setActiveId(null);
+          setActiveType(null);
+          return;
+        }
+
+        const res = await fetch('/api/admin/move', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'shiur',
+            itemId: activeIdStr,
+            sourcePath: currentPath,
+            targetPath: targetPath,
+          }),
+        });
+
+        if (res.ok) {
+          showMessage('success', 'Shiur moved successfully');
+          await loadLibrary();
+        } else {
+          const data = await res.json();
+          showMessage('error', data.error || 'Failed to move shiur');
         }
       } else if (activeType === 'folder') {
         // Moving a folder
-        // Check if dropped on another folder or root
-        if ((over.id as string).startsWith('folder-')) {
-          const targetFolderId = overIdStr;
-          const sourcePath = [...currentPath, activeIdStr];
-          const targetPath = [...currentPath, targetFolderId];
+        let targetPath: string[] = [];
+        
+        if (overIdStr.startsWith('folder-')) {
+          // Dropped on another folder in current view
+          const targetFolderId = overIdStr.replace('folder-', '');
+          targetPath = [...currentPath, targetFolderId];
+        } else if (overIdStr.startsWith('breadcrumb-')) {
+          // Dropped on a breadcrumb folder
+          const breadcrumbId = overIdStr.replace('breadcrumb-', '');
           
-          const res = await fetch('/api/admin/move', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              type: 'folder',
-              sourcePath: sourcePath,
-              targetPath: targetPath,
-            }),
-          });
-
-          if (res.ok) {
-            showMessage('success', 'Folder moved successfully');
-            await loadLibrary();
+          if (breadcrumbId === 'root') {
+            targetPath = [];
           } else {
-            const data = await res.json();
-            showMessage('error', data.error || 'Failed to move folder');
+            const breadcrumbIndex = parseInt(breadcrumbId);
+            if (isNaN(breadcrumbIndex)) {
+              setActiveId(null);
+              setActiveType(null);
+              return;
+            }
+            targetPath = currentPath.slice(0, breadcrumbIndex + 1);
           }
+        } else {
+          setActiveId(null);
+          setActiveType(null);
+          return;
+        }
+        
+        const sourcePath = [...currentPath, activeIdStr];
+        
+        const res = await fetch('/api/admin/move', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'folder',
+            sourcePath: sourcePath,
+            targetPath: targetPath,
+          }),
+        });
+
+        if (res.ok) {
+          showMessage('success', 'Folder moved successfully');
+          await loadLibrary();
+        } else {
+          const data = await res.json();
+          showMessage('error', data.error || 'Failed to move folder');
         }
       }
     } catch (error) {
@@ -734,26 +827,31 @@ export default function AdminShiurimPage() {
         <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
           {/* Breadcrumb */}
           <nav className="flex items-center text-sm flex-1 min-w-0">
-            <button
-              onClick={() => setCurrentPath([])}
-              className="flex items-center gap-1 text-gray-700 hover:text-primary transition-colors p-1 rounded hover:bg-gray-100"
-              title="Home"
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-              </svg>
-            </button>
+            <DroppableArea id="root" type="breadcrumb">
+              <button
+                onClick={() => setCurrentPath([])}
+                className="flex items-center gap-1 text-gray-700 hover:text-primary transition-colors p-1 rounded hover:bg-gray-100"
+                title="Home - Drag here to move to root"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                </svg>
+              </button>
+            </DroppableArea>
             {getFolderNamesFromPath(currentPath).map((name, index) => (
               <span key={index} className="flex items-center">
                 <svg className="w-4 h-4 mx-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                 </svg>
-                <button
-                  onClick={() => setCurrentPath(currentPath.slice(0, index + 1))}
-                  className="text-gray-700 hover:text-primary transition-colors px-1 py-0.5 rounded hover:bg-gray-100 truncate max-w-[150px]"
-                >
-                  {name}
-                </button>
+                <DroppableArea id={`${index}`} type="breadcrumb">
+                  <button
+                    onClick={() => setCurrentPath(currentPath.slice(0, index + 1))}
+                    className="text-gray-700 hover:text-primary transition-colors px-1 py-0.5 rounded hover:bg-gray-100 truncate max-w-[150px]"
+                    title={`Drag here to move to ${name}`}
+                  >
+                    {name}
+                  </button>
+                </DroppableArea>
               </span>
             ))}
           </nav>
@@ -841,36 +939,57 @@ export default function AdminShiurimPage() {
           {currentPath.length > 0 && (
             <div className="flex items-center gap-2">
               {showUploadForm ? (
-                <form onSubmit={handleUpload} className="flex items-center gap-2">
+                <form onSubmit={handleUpload} className="flex items-center gap-2 flex-wrap">
                   <input
                     type="file"
                     id="file-upload"
                     accept=".mp3,.m4a,.wav,audio/*"
-                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                    multiple
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      setUploadFiles(files);
+                      // Auto-populate title from filename if single file and title is empty
+                      if (files.length === 1 && !uploadTitle) {
+                        const fileNameWithoutExt = files[0].name.replace(/\.[^/.]+$/, '');
+                        setUploadTitle(fileNameWithoutExt);
+                      } else if (files.length > 1) {
+                        // Clear title for multiple files (will use individual filenames)
+                        setUploadTitle('');
+                      }
+                    }}
                     className="hidden"
                   />
                   <label
                     htmlFor="file-upload"
                     className="px-3 py-1.5 text-sm text-gray-700 bg-gray-50 hover:bg-gray-100 rounded transition-colors border border-gray-200 cursor-pointer"
                   >
-                    {uploadFile ? uploadFile.name : 'Choose File'}
+                    {uploadFiles.length === 0 
+                      ? 'Choose Files' 
+                      : uploadFiles.length === 1 
+                        ? uploadFiles[0].name 
+                        : `${uploadFiles.length} files selected`}
                   </label>
-                  <input
-                    type="text"
-                    value={uploadTitle}
-                    onChange={(e) => setUploadTitle(e.target.value)}
-                    className="px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent w-48"
-                    placeholder="Shiur title"
-                  />
+                  {uploadFiles.length === 1 && (
+                    <input
+                      type="text"
+                      value={uploadTitle}
+                      onChange={(e) => setUploadTitle(e.target.value)}
+                      className="px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent w-48"
+                      placeholder="Shiur title (optional)"
+                    />
+                  )}
                   <input
                     type="date"
                     value={uploadDate}
                     onChange={(e) => setUploadDate(e.target.value)}
                     className="px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
+                  {uploadProgress && uploadStatus && (
+                    <span className="text-xs text-gray-600">{uploadStatus}</span>
+                  )}
                   <button
                     type="submit"
-                    disabled={uploadProgress || !uploadFile || !uploadTitle}
+                    disabled={uploadProgress || uploadFiles.length === 0}
                     className="px-3 py-1.5 text-sm bg-primary text-white rounded hover:bg-primary-dark transition-colors disabled:opacity-50"
                   >
                     {uploadProgress ? 'Uploading...' : 'Upload'}
@@ -879,8 +998,11 @@ export default function AdminShiurimPage() {
                     type="button"
                     onClick={() => {
                       setShowUploadForm(false);
-                      setUploadFile(null);
+                      setUploadFiles([]);
                       setUploadTitle('');
+                      setUploadStatus('');
+                      const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+                      if (fileInput) fileInput.value = '';
                     }}
                     className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors"
                   >
@@ -926,11 +1048,23 @@ export default function AdminShiurimPage() {
                     <DroppableArea key={folder.id} id={folder.id} type="folder">
                       <DraggableItem id={folder.id} type="folder" isDragging={isDragging}>
                         <div
-                          className="group relative flex flex-col items-center p-3 rounded-lg hover:bg-gray-100 transition-colors cursor-move"
-                          onDoubleClick={() => !isCategory && handleDoubleClick('folder', folder.id, folder.name)}
+                          className="group relative flex flex-col items-center p-3 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                          onClick={(e) => {
+                            // Single click to enter folder (unless renaming or clicking delete button)
+                            if (!isRenaming && e.target === e.currentTarget || (e.target as HTMLElement).closest('svg')) {
+                              setCurrentPath([...currentPath, folder.id]);
+                            }
+                          }}
+                          onDoubleClick={(e) => {
+                            // Double click to rename
+                            if (!isCategory) {
+                              e.stopPropagation();
+                              handleDoubleClick('folder', folder.id, folder.name);
+                            }
+                          }}
                         >
                           {/* Folder Icon */}
-                          <div className="relative mb-2">
+                          <div className="relative mb-2" onClick={() => setCurrentPath([...currentPath, folder.id])}>
                             <svg className="w-16 h-16 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                               <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
                             </svg>
@@ -967,10 +1101,7 @@ export default function AdminShiurimPage() {
                               onClick={(e) => e.stopPropagation()}
                             />
                           ) : (
-                            <span
-                              className="text-sm text-center break-words max-w-full px-1"
-                              onClick={() => setCurrentPath([...currentPath, folder.id])}
-                            >
+                            <span className="text-sm text-center break-words max-w-full px-1">
                               {folder.name}
                             </span>
                           )}
