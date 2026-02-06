@@ -274,28 +274,40 @@ export default function AdminEventsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary">Admin - Events</h1>
+      <div className="bg-white/95 backdrop-blur-sm shadow-md border-b border-white/40">
+        <div className="max-w-full mx-auto px-2 sm:px-3 lg:px-4 py-3 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary overflow-hidden border border-primary/20 shadow-sm">
+              <img
+                src="/bbm-navbar-logo-white.png"
+                alt="BBM Logo"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div>
+              <h1 className="text-lg sm:text-xl font-semibold text-primary">Events</h1>
+              <p className="text-xs text-gray-500">Admin console</p>
+            </div>
+          </div>
           <div className="flex items-center gap-3">
             <Link
               href="/admin/shiurim"
-              className="px-4 py-2 text-primary hover:text-secondary transition-colors font-medium"
+              className="px-3 py-1.5 text-sm text-primary hover:text-primary-dark transition-colors font-medium"
             >
               Shiurim
             </Link>
             <Link
               href="/"
-              className="px-4 py-2 text-primary hover:text-secondary transition-colors font-medium flex items-center gap-2"
+              className="px-3 py-1.5 text-sm text-primary hover:text-primary-dark transition-colors font-medium flex items-center gap-1.5"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              Back to Website
+              Back
             </Link>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              className="px-3 py-1.5 text-sm bg-white text-primary border border-primary/20 rounded-md hover:bg-primary/5 transition-colors"
             >
               Logout
             </button>

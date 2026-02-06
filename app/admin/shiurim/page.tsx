@@ -17,6 +17,7 @@ import {
   useDraggable,
   useDroppable,
 } from '@dnd-kit/core';
+import { sortFoldersByNumber, sortShiurimByNumber } from '@/lib/sort-by-number';
 
 // Draggable Item Component
 function DraggableItem({
@@ -923,8 +924,8 @@ export default function AdminShiurimPage() {
   };
 
   const currentFolder = getCurrentFolder();
-  const displayFolders = currentFolder?.folders || library.folders;
-  const displayShiurim = currentFolder?.shiurim || [];
+  const displayFolders = sortFoldersByNumber(currentFolder?.folders || library.folders);
+  const displayShiurim = sortShiurimByNumber(currentFolder?.shiurim || []);
   const allItems = [
     ...displayFolders.map(f => ({ type: 'folder' as const, data: f })),
     ...displayShiurim.map(s => ({ type: 'shiur' as const, data: s })),
@@ -1290,7 +1291,7 @@ export default function AdminShiurimPage() {
                     <DroppableArea key={folder.id} id={folder.id} type="folder">
                       <DraggableItem id={folder.id} type="folder" isDragging={isDragging}>
                         <div
-                          className={`group relative flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-200/70 bg-white shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-pointer ${
+                          className={`group relative flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-200/70 bg-white shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-pointer h-[180px] ${
                             isSelected ? 'bg-primary/10 ring-2 ring-primary/40' : ''
                           }`}
                           onClick={(e) => {
@@ -1359,12 +1360,12 @@ export default function AdminShiurimPage() {
                               dir="auto"
                             />
                           ) : (
-                            <span className="text-sm text-center font-medium text-gray-900 break-words max-w-full px-1" dir="auto">
+                            <span className="text-sm text-center font-medium text-gray-900 break-words max-w-full px-1 line-clamp-2" dir="auto">
                               {folder.name}
                             </span>
                           )}
                           {!isRenaming && (
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-500 mt-auto">
                               {folder.folders.length + folder.shiurim.length} item
                               {folder.folders.length + folder.shiurim.length !== 1 ? 's' : ''}
                             </div>
@@ -1383,7 +1384,7 @@ export default function AdminShiurimPage() {
                   return (
                     <DraggableItem key={shiur.id} id={shiur.id} type="shiur" isDragging={isDragging}>
                       <div
-                        className={`group relative flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-200/70 bg-white shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-move ${
+                        className={`group relative flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-200/70 bg-white shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-move h-[180px] ${
                           isSelected ? 'bg-primary/10 ring-2 ring-primary/40' : ''
                         }`}
                         onClick={(e) => handleItemClick(shiur.id, 'shiur', e)}
@@ -1430,11 +1431,11 @@ export default function AdminShiurimPage() {
                           />
                         ) : (
                           <>
-                            <span className="text-sm text-center font-medium text-gray-900 break-words max-w-full px-1" dir="auto">
+                            <span className="text-sm text-center font-medium text-gray-900 break-words max-w-full px-1 line-clamp-2" dir="auto">
                               {shiur.title}
                             </span>
                             {shiur.duration > 0 && (
-                              <span className="text-xs text-primary bg-accent/30 border border-accent/40 px-2 py-0.5 rounded-full mt-1">
+                              <span className="text-xs text-primary bg-accent/30 border border-accent/40 px-2 py-0.5 rounded-full mt-auto">
                                 {formatDuration(shiur.duration)}
                               </span>
                             )}

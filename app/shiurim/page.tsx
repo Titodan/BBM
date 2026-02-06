@@ -5,6 +5,7 @@ import { getShiurimLibrary, getFolderByPath } from '@/lib/shiurim-data';
 import { ShiurFolder, ShiurRecording } from '@/types';
 import Link from 'next/link';
 import { memo } from 'react';
+import { sortFoldersByNumber, sortShiurimByNumber } from '@/lib/sort-by-number';
 
 interface PageProps {
   searchParams: Promise<{ path?: string }>;
@@ -56,8 +57,8 @@ export default async function ShiurimPage({ searchParams }: PageProps) {
     );
   }
 
-  const folders = currentFolder?.folders || library.folders;
-  const shiurim = currentFolder?.shiurim || [];
+  const folders = sortFoldersByNumber(currentFolder?.folders || library.folders);
+  const shiurim = sortShiurimByNumber(currentFolder?.shiurim || []);
   const hasContent = folders.length > 0 || shiurim.length > 0;
   
   // Check if we're at root level and should show category sections
