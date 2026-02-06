@@ -1456,7 +1456,7 @@ export default function AdminShiurimPage() {
                     <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Name</span>
                   </div>
                   <div className="col-span-2">
-                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Type</span>
+                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Length</span>
                   </div>
                   <div className="col-span-3">
                     <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Date</span>
@@ -1617,11 +1617,12 @@ export default function AdminShiurimPage() {
                           </div>
                           <div className="col-span-2">
                             <div className="flex flex-col">
-                                <span className="text-sm text-gray-600">Audio</span>
-                              {shiur.duration > 0 && (
-                                  <span className="text-xs text-gray-400">
+                              {shiur.duration > 0 ? (
+                                  <span className="text-sm text-gray-600">
                                   {formatDuration(shiur.duration)}
                                 </span>
+                              ) : (
+                                <span className="text-sm text-gray-400">-</span>
                               )}
                             </div>
                           </div>
