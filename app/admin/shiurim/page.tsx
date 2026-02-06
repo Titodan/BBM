@@ -1023,9 +1023,9 @@ export default function AdminShiurimPage() {
       <div className="min-h-screen bg-light flex flex-col">
         {/* Header */}
         <div className="bg-white/95 backdrop-blur-sm shadow-md border-b border-white/40">
-          <div className="max-w-full mx-auto px-2 sm:px-3 lg:px-4 py-3 flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary overflow-hidden border border-primary/20 shadow-sm">
+          <div className="max-w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 flex justify-between items-center">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-full bg-primary overflow-hidden border border-primary/20 shadow-sm">
                 <img
                   src="/bbm-navbar-logo-white.png"
                   alt="BBM Logo"
@@ -1033,29 +1033,29 @@ export default function AdminShiurimPage() {
                 />
               </div>
               <div>
-                <h1 className="text-lg sm:text-xl font-semibold text-primary">Shiurim Library</h1>
+                <h1 className="text-xl sm:text-2xl font-semibold text-primary">Shiurim Library</h1>
                 <p className="text-xs text-gray-500">Admin console</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3.5">
               <Link
                 href="/admin/events"
-                className="px-3 py-1.5 text-sm text-primary hover:text-primary-dark transition-colors font-medium"
+                className="px-3.5 py-2 text-sm text-primary hover:text-primary-dark transition-colors font-medium"
               >
                 Events
               </Link>
               <Link
                 href="/"
-                className="px-3 py-1.5 text-sm text-primary hover:text-primary-dark transition-colors font-medium flex items-center gap-1.5"
+                className="px-3.5 py-2 text-sm text-primary hover:text-primary-dark transition-colors font-medium flex items-center gap-1.5"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
                 Back
               </Link>
               <button
                 onClick={handleLogout}
-                className="px-3 py-1.5 text-sm bg-white text-primary border border-primary/20 rounded-md hover:bg-primary/5 transition-colors"
+                className="px-3.5 py-2 text-sm bg-white text-primary border border-primary/20 rounded-md hover:bg-primary/5 transition-colors"
               >
                 Logout
               </button>
@@ -1090,29 +1090,29 @@ export default function AdminShiurimPage() {
         )}
 
         {/* Toolbar */}
-        <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200 px-4 py-2 flex items-center justify-between">
+        <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200 px-5 py-2.5 flex items-center justify-between">
           {/* Breadcrumb */}
           <nav className="flex items-center text-sm flex-1 min-w-0">
             <DroppableArea id="root" type="breadcrumb">
               <button
                 onClick={() => setCurrentPath([])}
-                className="flex items-center gap-1 text-primary hover:text-primary-dark transition-colors p-1 rounded hover:bg-primary/5"
+                className="flex items-center gap-1 text-primary hover:text-primary-dark transition-colors p-1.5 rounded hover:bg-primary/5"
                 title="Home - Drag here to move to root"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
                 </svg>
               </button>
             </DroppableArea>
             {getFolderNamesFromPath(currentPath).map((name, index) => (
               <span key={index} className="flex items-center">
-                <svg className="w-4 h-4 mx-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4.5 h-4.5 mx-1.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                 </svg>
                 <DroppableArea id={`${index}`} type="breadcrumb">
                   <button
                     onClick={() => setCurrentPath(currentPath.slice(0, index + 1))}
-                    className="text-primary hover:text-primary-dark transition-colors px-1 py-0.5 rounded hover:bg-primary/5 truncate max-w-[150px]"
+                    className="text-primary hover:text-primary-dark transition-colors px-1.5 py-1 rounded hover:bg-primary/5 truncate max-w-[170px]"
                     title={`Drag here to move to ${name}`}
                     dir="auto"
                   >
@@ -1134,7 +1134,7 @@ export default function AdminShiurimPage() {
               }`}
               title="Grid view"
             >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
               </svg>
             </button>
@@ -1147,7 +1147,7 @@ export default function AdminShiurimPage() {
               }`}
               title="List view"
             >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
               </svg>
             </button>
@@ -1155,7 +1155,7 @@ export default function AdminShiurimPage() {
         </div>
 
         {/* Quick Actions Bar */}
-        <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200 px-4 py-2 flex items-center justify-between gap-4">
+        <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200 px-5 py-2.5 flex items-center justify-between gap-4">
           {/* Folder Creation */}
           <div className="flex items-center gap-4 flex-1">
             <div className="flex items-center gap-2">
@@ -1176,14 +1176,14 @@ export default function AdminShiurimPage() {
                       setNewFolderName('');
                     }
                   }}
-                  className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="flex-1 px-3.5 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="Folder name"
                   autoFocus
                 />
                 <button
                   type="submit"
                   disabled={folderCreating || !newFolderName.trim()}
-                  className="px-3 py-1.5 text-sm bg-primary text-white rounded hover:bg-primary-dark transition-colors disabled:opacity-50"
+                  className="px-3.5 py-2 text-sm bg-primary text-white rounded hover:bg-primary-dark transition-colors disabled:opacity-50"
                 >
                   {folderCreating ? 'Creating...' : 'Create'}
                 </button>
@@ -1193,7 +1193,7 @@ export default function AdminShiurimPage() {
                     setShowFolderForm(false);
                     setNewFolderName('');
                   }}
-                  className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                  className="px-3.5 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors"
                 >
                   Cancel
                 </button>
@@ -1201,9 +1201,9 @@ export default function AdminShiurimPage() {
             ) : (
               <button
                 onClick={() => setShowFolderForm(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-primary bg-white hover:bg-primary/5 rounded transition-colors border border-primary/20"
+                className="flex items-center gap-1.5 px-3.5 py-2 text-sm text-primary bg-white hover:bg-primary/5 rounded transition-colors border border-primary/20"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
                 New Folder
@@ -1223,9 +1223,9 @@ export default function AdminShiurimPage() {
           {currentPath.length > 0 && !showUploadForm && (
             <button
               onClick={() => setShowUploadForm(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-primary bg-accent/90 hover:bg-accent rounded transition-colors border border-accent text-primary-dark font-medium"
+              className="flex items-center gap-1.5 px-3.5 py-2 text-sm text-primary bg-accent/90 hover:bg-accent rounded transition-colors border border-accent text-primary-dark font-medium"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
               Upload Shiur
@@ -1260,8 +1260,8 @@ export default function AdminShiurimPage() {
             <>
               {/* Selection indicator */}
               {selectedItems.size > 0 && (
-                <div className="sticky top-0 z-10 bg-primary/10 border-b border-primary/20 px-4 py-2 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                <div className="sticky top-0 z-10 bg-primary/10 border-b border-primary/20 px-5 py-2.5 flex items-center justify-between">
+                  <div className="flex items-center gap-3.5">
                     <span className="text-sm font-medium text-primary">
                       {selectedItems.size} item{selectedItems.size > 1 ? 's' : ''} selected
                     </span>
