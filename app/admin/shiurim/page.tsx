@@ -129,6 +129,10 @@ export default function AdminShiurimPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeType, setActiveType] = useState<'folder' | 'shiur' | null>(null);
   
+  // Multi-select state
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
+  
   // Rename state
   const [renamingItem, setRenamingItem] = useState<{
     type: 'folder' | 'shiur';
@@ -159,6 +163,11 @@ export default function AdminShiurimPage() {
       loadLibrary();
     }
   }, [isAuthenticated]);
+
+  // Clear selection when path changes
+  useEffect(() => {
+    clearSelection();
+  }, [currentPath]);
 
   useEffect(() => {
     if (renamingItem) {
@@ -524,6 +533,56 @@ export default function AdminShiurimPage() {
     }
   };
 
+  // Selection handlers
+  const handleItemClick = (id: string, type: 'folder' | 'shiur', event: React.MouseEvent) => {
+    // Don't select if renaming
+    if (renamingItem) return;
+
+    const itemKey = `${type}-${id}`;
+    
+    if (event.metaKey || event.ctrlKey) {
+      // Cmd/Ctrl + Click: Toggle selection
+      setSelectedItems(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(itemKey)) {
+          newSet.delete(itemKey);
+        } else {
+          newSet.add(itemKey);
+        }
+        return newSet;
+      });
+      setLastSelectedId(itemKey);
+    } else if (event.shiftKey && lastSelectedId) {
+      // Shift + Click: Range selection
+      const allItemKeys = allItems.map(item => 
+        `${item.type}-${item.type === 'folder' ? item.data.id : item.data.id}`
+      );
+      const lastIndex = allItemKeys.indexOf(lastSelectedId);
+      const currentIndex = allItemKeys.indexOf(itemKey);
+      
+      if (lastIndex !== -1 && currentIndex !== -1) {
+        const start = Math.min(lastIndex, currentIndex);
+        const end = Math.max(lastIndex, currentIndex);
+        const range = allItemKeys.slice(start, end + 1);
+        
+        setSelectedItems(prev => {
+          const newSet = new Set(prev);
+          range.forEach(key => newSet.add(key));
+          return newSet;
+        });
+      }
+    } else {
+      // Regular click: Select only this item
+      setSelectedItems(new Set([itemKey]));
+      setLastSelectedId(itemKey);
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedItems(new Set());
+    setLastSelectedId(null);
+  };
+
   // Drag and drop handlers
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -535,6 +594,13 @@ export default function AdminShiurimPage() {
     } else if (id.startsWith('shiur-')) {
       setActiveType('shiur');
       setActiveId(id.replace('shiur-', ''));
+      
+      // If dragging an item that's selected, drag all selected items
+      const itemKey = `shiur-${id.replace('shiur-', '')}`;
+      if (!selectedItems.has(itemKey)) {
+        // If dragging an unselected item, select only it
+        setSelectedItems(new Set([itemKey]));
+      }
     }
   };
 
@@ -559,7 +625,7 @@ export default function AdminShiurimPage() {
 
     try {
       if (activeType === 'shiur') {
-        // Moving a shiur
+        // Moving shiur(s)
         let targetPath: string[] = [];
         
         if (overIdStr.startsWith('folder-')) {
@@ -575,6 +641,7 @@ export default function AdminShiurimPage() {
             showMessage('error', 'Shiurim must be in a folder. Please select a folder to move to.');
             setActiveId(null);
             setActiveType(null);
+            clearSelection();
             return;
           }
           
@@ -597,27 +664,55 @@ export default function AdminShiurimPage() {
         if (JSON.stringify(targetPath) === JSON.stringify(currentPath)) {
           setActiveId(null);
           setActiveType(null);
+          clearSelection();
           return;
         }
 
-        const res = await fetch('/api/admin/move', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'shiur',
-            itemId: activeIdStr,
-            sourcePath: currentPath,
-            targetPath: targetPath,
-          }),
-        });
+        // Get all selected shiur IDs (filter to only shiurim, not folders)
+        const selectedShiurIds = Array.from(selectedItems)
+          .filter(key => key.startsWith('shiur-'))
+          .map(key => key.replace('shiur-', ''));
+        
+        // If no items are selected or the dragged item isn't selected, just move the dragged item
+        const itemsToMove = selectedShiurIds.length > 0 ? selectedShiurIds : [activeIdStr];
+        
+        let successCount = 0;
+        let failCount = 0;
 
-        if (res.ok) {
-          showMessage('success', 'Shiur moved successfully');
-          await loadLibrary();
-        } else {
-          const data = await res.json();
-          showMessage('error', data.error || 'Failed to move shiur');
+        // Move each shiur
+        for (const shiurId of itemsToMove) {
+          try {
+            const res = await fetch('/api/admin/move', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: 'shiur',
+                itemId: shiurId,
+                sourcePath: currentPath,
+                targetPath: targetPath,
+              }),
+            });
+
+            if (res.ok) {
+              successCount++;
+            } else {
+              failCount++;
+            }
+          } catch (error) {
+            failCount++;
+          }
         }
+
+        if (successCount > 0 && failCount === 0) {
+          showMessage('success', `${successCount} shiur${successCount > 1 ? 'im' : ''} moved successfully`);
+        } else if (successCount > 0 && failCount > 0) {
+          showMessage('error', `Moved ${successCount} shiur${successCount > 1 ? 'im' : ''}, ${failCount} failed`);
+        } else {
+          showMessage('error', 'Failed to move shiurim');
+        }
+        
+        await loadLibrary();
+        clearSelection();
       } else if (activeType === 'folder') {
         // Moving a folder
         let targetPath: string[] = [];
@@ -787,6 +882,32 @@ export default function AdminShiurimPage() {
     ...displayFolders.map(f => ({ type: 'folder' as const, data: f })),
     ...displayShiurim.map(s => ({ type: 'shiur' as const, data: s })),
   ];
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Select all: Cmd/Ctrl + A
+      if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
+        e.preventDefault();
+        const currentItems = [
+          ...displayFolders.map(f => ({ type: 'folder' as const, data: f })),
+          ...displayShiurim.map(s => ({ type: 'shiur' as const, data: s })),
+        ];
+        const allItemKeys = currentItems.map(item => 
+          `${item.type}-${item.type === 'folder' ? item.data.id : item.data.id}`
+        );
+        setSelectedItems(new Set(allItemKeys));
+      }
+      
+      // Deselect all: Escape
+      if (e.key === 'Escape') {
+        clearSelection();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [displayFolders, displayShiurim]);
 
   if (isLoading) {
     return (
@@ -959,7 +1080,8 @@ export default function AdminShiurimPage() {
         {/* Quick Actions Bar */}
         <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between gap-4">
           {/* Folder Creation */}
-          <div className="flex items-center gap-2 flex-1">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="flex items-center gap-2">
             {showFolderForm ? (
               <form onSubmit={handleCreateFolder} className="flex items-center gap-2 flex-1">
                 <input
@@ -1010,6 +1132,14 @@ export default function AdminShiurimPage() {
                 New Folder
               </button>
             )}
+            </div>
+            
+            {/* Help text */}
+            {allItems.length > 0 && (
+              <div className="text-xs text-gray-500 hidden md:block">
+                <span className="font-medium">Tip:</span> ⌘/Ctrl+Click to multi-select • Shift+Click for range • Drag to move
+              </div>
+            )}
           </div>
 
           {/* Upload Controls - Only show when in a folder */}
@@ -1032,9 +1162,15 @@ export default function AdminShiurimPage() {
           onDragOver={currentPath.length > 0 ? handleDragOver : undefined}
           onDragLeave={currentPath.length > 0 ? handleDragLeave : undefined}
           onDrop={currentPath.length > 0 ? handleDrop : undefined}
+          onClick={(e) => {
+            // Clear selection when clicking on empty space
+            if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.empty-area')) {
+              clearSelection();
+            }
+          }}
         >
           {allItems.length === 0 ? (
-            <div className="flex items-center justify-center h-full py-20">
+            <div className="flex items-center justify-center h-full py-20 empty-area">
               <div className="text-center text-gray-500">
                 <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
@@ -1043,23 +1179,58 @@ export default function AdminShiurimPage() {
                 <p className="text-sm mt-1">Create a folder or upload a shiur to get started</p>
               </div>
             </div>
-          ) : viewMode === 'grid' ? (
+          ) : (
+            <>
+              {/* Selection indicator */}
+              {selectedItems.size > 0 && (
+                <div className="sticky top-0 z-10 bg-blue-50 border-b border-blue-200 px-4 py-2 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-blue-900">
+                      {selectedItems.size} item{selectedItems.size > 1 ? 's' : ''} selected
+                    </span>
+                    <span className="text-xs text-blue-700">
+                      Drag to move • Esc to clear
+                    </span>
+                  </div>
+                  <button
+                    onClick={clearSelection}
+                    className="text-sm text-blue-700 hover:text-blue-900 font-medium"
+                  >
+                    Clear selection
+                  </button>
+                </div>
+              )}
+              
+              {viewMode === 'grid' ? (
             <div className="p-4">
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {displayFolders.map((folder) => {
                   const isCategory = currentPath.length === 0 && isCategoryFolder(folder.id);
                   const isRenaming = renamingItem?.type === 'folder' && renamingItem.id === folder.id;
                   const isDragging = activeType === 'folder' && activeId === folder.id;
+                  const isSelected = selectedItems.has(`folder-${folder.id}`);
 
                   return (
                     <DroppableArea key={folder.id} id={folder.id} type="folder">
                       <DraggableItem id={folder.id} type="folder" isDragging={isDragging}>
                         <div
-                          className="group relative flex flex-col items-center p-3 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                          className={`group relative flex flex-col items-center p-3 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer ${
+                            isSelected ? 'bg-blue-100 ring-2 ring-blue-500' : ''
+                          }`}
                           onClick={(e) => {
-                            // Single click to enter folder (unless renaming or clicking delete button)
-                            if (!isRenaming && e.target === e.currentTarget || (e.target as HTMLElement).closest('svg')) {
-                              setCurrentPath([...currentPath, folder.id]);
+                            // Check if clicking on the folder area itself or SVG
+                            const target = e.target as HTMLElement;
+                            const isFolderArea = target === e.currentTarget || target.closest('svg')?.parentElement?.classList.contains('relative');
+                            
+                            if (!isRenaming && isFolderArea && !target.closest('button')) {
+                              if (e.metaKey || e.ctrlKey || e.shiftKey) {
+                                // Multi-select
+                                handleItemClick(folder.id, 'folder', e);
+                              } else {
+                                // Regular click - enter folder
+                                setCurrentPath([...currentPath, folder.id]);
+                                clearSelection();
+                              }
                             }
                           }}
                           onDoubleClick={(e) => {
@@ -1122,12 +1293,19 @@ export default function AdminShiurimPage() {
                 {displayShiurim.map((shiur) => {
                   const isRenaming = renamingItem?.type === 'shiur' && renamingItem.id === shiur.id;
                   const isDragging = activeType === 'shiur' && activeId === shiur.id;
+                  const isSelected = selectedItems.has(`shiur-${shiur.id}`);
 
                   return (
                     <DraggableItem key={shiur.id} id={shiur.id} type="shiur" isDragging={isDragging}>
                       <div
-                        className="group relative flex flex-col items-center p-3 rounded-lg hover:bg-gray-100 transition-colors cursor-move"
-                        onDoubleClick={() => handleDoubleClick('shiur', shiur.id, shiur.title)}
+                        className={`group relative flex flex-col items-center p-3 rounded-lg hover:bg-gray-100 transition-colors cursor-move ${
+                          isSelected ? 'bg-blue-100 ring-2 ring-blue-500' : ''
+                        }`}
+                        onClick={(e) => handleItemClick(shiur.id, 'shiur', e)}
+                        onDoubleClick={(e) => {
+                          e.stopPropagation();
+                          handleDoubleClick('shiur', shiur.id, shiur.title);
+                        }}
                       >
                         {/* Audio Icon */}
                         <div className="relative mb-2">
@@ -1201,13 +1379,26 @@ export default function AdminShiurimPage() {
                     const isCategory = currentPath.length === 0 && isCategoryFolder(folder.id);
                     const isRenaming = renamingItem?.type === 'folder' && renamingItem.id === folder.id;
                     const isDragging = activeType === 'folder' && activeId === folder.id;
+                    const isSelected = selectedItems.has(`folder-${folder.id}`);
 
                     return (
                       <DroppableArea key={folder.id} id={folder.id} type="folder">
                         <DraggableItem id={folder.id} type="folder" isDragging={isDragging}>
                           <div
-                            className="grid grid-cols-12 group hover:bg-gray-50 transition-colors cursor-move px-4 py-3 items-center"
-                            onDoubleClick={() => !isCategory && handleDoubleClick('folder', folder.id, folder.name)}
+                            className={`grid grid-cols-12 group hover:bg-gray-50 transition-colors cursor-move px-4 py-3 items-center ${
+                              isSelected ? 'bg-blue-100 ring-2 ring-blue-500 ring-inset' : ''
+                            }`}
+                            onClick={(e) => {
+                              if (e.metaKey || e.ctrlKey || e.shiftKey) {
+                                handleItemClick(folder.id, 'folder', e);
+                              }
+                            }}
+                            onDoubleClick={(e) => {
+                              if (!isCategory) {
+                                e.stopPropagation();
+                                handleDoubleClick('folder', folder.id, folder.name);
+                              }
+                            }}
                           >
                             <div className="col-span-5">
                               <div className="flex items-center gap-2">
@@ -1279,12 +1470,19 @@ export default function AdminShiurimPage() {
                   {displayShiurim.map((shiur) => {
                     const isRenaming = renamingItem?.type === 'shiur' && renamingItem.id === shiur.id;
                     const isDragging = activeType === 'shiur' && activeId === shiur.id;
+                    const isSelected = selectedItems.has(`shiur-${shiur.id}`);
 
                     return (
                       <DraggableItem key={shiur.id} id={shiur.id} type="shiur" isDragging={isDragging}>
                         <div
-                          className="grid grid-cols-12 group hover:bg-gray-50 transition-colors cursor-move px-4 py-3 items-center"
-                          onDoubleClick={() => handleDoubleClick('shiur', shiur.id, shiur.title)}
+                          className={`grid grid-cols-12 group hover:bg-gray-50 transition-colors cursor-move px-4 py-3 items-center ${
+                            isSelected ? 'bg-blue-100 ring-2 ring-blue-500 ring-inset' : ''
+                          }`}
+                          onClick={(e) => handleItemClick(shiur.id, 'shiur', e)}
+                          onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            handleDoubleClick('shiur', shiur.id, shiur.title);
+                          }}
                         >
                           <div className="col-span-5">
                             <div className="flex items-center gap-2">
@@ -1344,23 +1542,30 @@ export default function AdminShiurimPage() {
               </div>
             </div>
           )}
+            </>
+          )}
         </div>
 
         {/* Drag Overlay */}
         <DragOverlay>
           {activeId && activeType ? (
-            <div className="opacity-50">
+            <div className="opacity-80 bg-white rounded-lg shadow-xl p-3">
               {activeType === 'folder' ? (
-                <div className="flex flex-col items-center p-3">
+                <div className="flex flex-col items-center">
                   <svg className="w-16 h-16 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
                   </svg>
                 </div>
               ) : (
-                <div className="flex flex-col items-center p-3">
+                <div className="flex flex-col items-center">
                   <svg className="w-16 h-16 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
                   </svg>
+                  {activeType === 'shiur' && selectedItems.size > 1 && (
+                    <div className="mt-2 bg-blue-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+                      {selectedItems.size}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
