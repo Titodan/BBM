@@ -924,6 +924,7 @@ export default function AdminShiurimPage() {
                     onClick={() => setCurrentPath(currentPath.slice(0, index + 1))}
                     className="text-gray-700 hover:text-primary transition-colors px-1 py-0.5 rounded hover:bg-gray-100 truncate max-w-[150px]"
                     title={`Drag here to move to ${name}`}
+                    dir="auto"
                   >
                     {name}
                   </button>
@@ -1105,9 +1106,10 @@ export default function AdminShiurimPage() {
                               }}
                               className="w-full text-center text-sm border border-blue-500 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
                               onClick={(e) => e.stopPropagation()}
+                              dir="auto"
                             />
                           ) : (
-                            <span className="text-sm text-center break-words max-w-full px-1">
+                            <span className="text-sm text-center break-words max-w-full px-1" dir="auto">
                               {folder.name}
                             </span>
                           )}
@@ -1161,9 +1163,10 @@ export default function AdminShiurimPage() {
                             }}
                             className="w-full text-center text-sm border border-purple-500 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-purple-500"
                             onClick={(e) => e.stopPropagation()}
+                            dir="auto"
                           />
                         ) : (
-                          <span className="text-sm text-center break-words max-w-full px-1">
+                          <span className="text-sm text-center break-words max-w-full px-1" dir="auto">
                             {shiur.title}
                           </span>
                         )}
@@ -1227,11 +1230,13 @@ export default function AdminShiurimPage() {
                                     }}
                                     className="flex-1 text-sm border border-blue-500 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                     onClick={(e) => e.stopPropagation()}
+                                    dir="auto"
                                   />
                                 ) : (
                                   <button
                                     onClick={() => setCurrentPath([...currentPath, folder.id])}
                                     className="text-sm font-medium text-gray-900 hover:text-primary text-left"
+                                    dir="auto"
                                   >
                                     {folder.name}
                                   </button>
@@ -1302,9 +1307,10 @@ export default function AdminShiurimPage() {
                                   }}
                                   className="flex-1 text-sm border border-purple-500 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-purple-500"
                                   onClick={(e) => e.stopPropagation()}
+                                  dir="auto"
                                 />
                               ) : (
-                                <span className="text-sm font-medium text-gray-900">{shiur.title}</span>
+                                <span className="text-sm font-medium text-gray-900" dir="auto">{shiur.title}</span>
                               )}
                             </div>
                           </div>
@@ -1505,6 +1511,7 @@ export default function AdminShiurimPage() {
                         onChange={(e) => setUploadTitle(e.target.value)}
                         className="px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent w-64"
                         placeholder="Leave blank to use filename"
+                        dir="auto"
                       />
                     </div>
                   )}

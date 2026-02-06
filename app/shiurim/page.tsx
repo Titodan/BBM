@@ -99,7 +99,7 @@ export default async function ShiurimPage({ searchParams }: PageProps) {
                           />
                         </svg>
                         {isLast ? (
-                          <span className="ml-1 font-medium text-primary md:ml-2">
+                          <span className="ml-1 font-medium text-primary md:ml-2" dir="auto">
                             {folder.name}
                           </span>
                         ) : (
@@ -107,6 +107,7 @@ export default async function ShiurimPage({ searchParams }: PageProps) {
                             href={`/shiurim?path=${path}`}
                             className="ml-1 text-gray-700 hover:text-primary transition-colors md:ml-2"
                             prefetch={true}
+                            dir="auto"
                           >
                             {folder.name}
                           </Link>
@@ -121,7 +122,7 @@ export default async function ShiurimPage({ searchParams }: PageProps) {
 
           {/* Page Header */}
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-primary mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold text-primary mb-4" dir="auto">
               {folderPath.length === 0 ? 'Shiurim Library' : currentFolder?.name}
             </h1>
             <p className="text-xl text-gray-700">
@@ -246,7 +247,7 @@ function CategorySections({ folders }: { folders: ShiurFolder[] }) {
                       {category.name}
                     </h2>
                     <div className="h-px w-16 bg-accent mx-auto"></div>
-                    <p className="text-6xl font-hebrew text-white/95 font-semibold">
+                    <p className="text-6xl font-hebrew text-white/95 font-semibold" dir="auto">
                       {category.nameHebrew}
                     </p>
                   </div>
@@ -283,7 +284,7 @@ function CategorySections({ folders }: { folders: ShiurFolder[] }) {
                 <h2 className="text-3xl font-bold text-white mb-3">
                   {category.name}
                 </h2>
-                <p className="text-4xl font-hebrew text-white/90 mb-6">
+                <p className="text-4xl font-hebrew text-white/90 mb-6" dir="auto">
                   {category.nameHebrew}
                 </p>
               </div>
@@ -334,7 +335,7 @@ const FolderCard = memo(function FolderCard({ folder, currentPath }: { folder: S
             </svg>
           </div>
           <div className="flex-1">
-            <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-accent transition-colors">
+            <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-accent transition-colors" dir="auto">
               {folder.name}
             </h3>
             <div className="flex items-center gap-4 text-sm text-white/70">
@@ -399,7 +400,7 @@ const ShiurRow = memo(function ShiurRow({ shiur }: { shiur: ShiurRecording }) {
             
             {/* Title and Date */}
             <div className="flex-1 min-w-0">
-              <h3 className="text-xl font-semibold text-primary group-hover:text-yellow-600 transition-colors truncate">
+              <h3 className="text-xl font-semibold text-primary group-hover:text-yellow-600 transition-colors truncate" dir="auto">
                 {shiur.title}
               </h3>
               <div className="flex items-center gap-3 mt-2 text-sm text-gray-600">
