@@ -364,6 +364,41 @@ export default function AdminShiurimPage() {
     setUploadFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Extract audio duration from file or URL
+  const extractAudioDuration = (source: File | string, timeoutMs = 10000): Promise<number> => {
+    return new Promise((resolve) => {
+      const audio = new Audio();
+      audio.preload = 'metadata';
+      
+      const timeout = setTimeout(() => {
+        if (typeof source !== 'string') {
+          URL.revokeObjectURL(audio.src);
+        }
+        audio.src = '';
+        resolve(0);
+      }, timeoutMs);
+      
+      audio.onloadedmetadata = () => {
+        clearTimeout(timeout);
+        if (typeof source !== 'string') {
+          URL.revokeObjectURL(audio.src);
+        }
+        const duration = Math.floor(audio.duration);
+        resolve(isFinite(duration) ? duration : 0);
+      };
+      
+      audio.onerror = () => {
+        clearTimeout(timeout);
+        if (typeof source !== 'string') {
+          URL.revokeObjectURL(audio.src);
+        }
+        resolve(0);
+      };
+      
+      audio.src = typeof source === 'string' ? source : URL.createObjectURL(source);
+    });
+  };
+
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (uploadFiles.length === 0 || currentPath.length === 0) {
@@ -393,7 +428,12 @@ export default function AdminShiurimPage() {
           const ext = file.name.split('.').pop();
           const fileName = `${sanitizedTitle}-${timestamp}.${ext}`;
 
-          // Step 2: Get presigned URL for direct upload to R2
+          // Step 2: Extract audio duration
+          setUploadStatus(`Processing ${i + 1} of ${uploadFiles.length}: ${file.name}...`);
+          const duration = await extractAudioDuration(file);
+
+          // Step 3: Get presigned URL for direct upload to R2
+          setUploadStatus(`Uploading ${i + 1} of ${uploadFiles.length}: ${file.name}...`);
           const presignedRes = await fetch('/api/admin/presigned-url', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -410,7 +450,7 @@ export default function AdminShiurimPage() {
 
           const { uploadUrl } = await presignedRes.json();
 
-          // Step 3: Upload file directly to R2 using presigned URL
+          // Step 4: Upload file directly to R2 using presigned URL
           const uploadRes = await fetch(uploadUrl, {
             method: 'PUT',
             body: file,
@@ -424,7 +464,7 @@ export default function AdminShiurimPage() {
             continue;
           }
 
-          // Step 4: Register the upload in our system
+          // Step 5: Register the upload in our system
           const registerRes = await fetch('/api/admin/register-upload', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -434,6 +474,7 @@ export default function AdminShiurimPage() {
               folderPath: currentPath,
               fileName,
               fileSize: file.size,
+              duration, // Include the extracted duration
               contentType: file.type || 'audio/mpeg',
             }),
           });
@@ -873,6 +914,12 @@ export default function AdminShiurimPage() {
     }
 
     return names;
+  };
+
+  const formatDuration = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${String(secs).padStart(2, '0')}`;
   };
 
   const currentFolder = getCurrentFolder();
@@ -1344,9 +1391,16 @@ export default function AdminShiurimPage() {
                             dir="auto"
                           />
                         ) : (
-                          <span className="text-sm text-center break-words max-w-full px-1" dir="auto">
-                            {shiur.title}
-                          </span>
+                          <>
+                            <span className="text-sm text-center break-words max-w-full px-1" dir="auto">
+                              {shiur.title}
+                            </span>
+                            {shiur.duration > 0 && (
+                              <span className="text-xs text-gray-500 mt-1">
+                                {formatDuration(shiur.duration)}
+                              </span>
+                            )}
+                          </>
                         )}
                       </div>
                     </DraggableItem>
@@ -1513,7 +1567,14 @@ export default function AdminShiurimPage() {
                             </div>
                           </div>
                           <div className="col-span-2">
-                            <span className="text-sm text-gray-500">Audio</span>
+                            <div className="flex flex-col">
+                              <span className="text-sm text-gray-500">Audio</span>
+                              {shiur.duration > 0 && (
+                                <span className="text-xs text-gray-400">
+                                  {formatDuration(shiur.duration)}
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <div className="col-span-3">
                             <span className="text-sm text-gray-500">

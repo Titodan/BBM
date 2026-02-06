@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     // Check authentication
     await requireAuth();
 
-    const { title, recordedDate, folderPath, fileName, fileSize } = await req.json();
+    const { title, recordedDate, folderPath, fileName, fileSize, duration } = await req.json();
 
     // Validate inputs
     if (!title || !recordedDate) {
@@ -41,10 +41,6 @@ export async function POST(req: NextRequest) {
     // Generate audio URL
     const audioUrl = `${PUBLIC_URL}/${fileName}`;
 
-    // Get audio duration (simplified - in production use a library like music-metadata)
-    // For now, we'll set it to 0 and can update it later
-    const duration = 0;
-
     // Extract ID from filename (remove extension)
     const sanitizedTitle = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const timestamp = Date.now();
@@ -54,7 +50,7 @@ export async function POST(req: NextRequest) {
       id: `${sanitizedTitle}-${timestamp}`,
       title,
       recordedDate,
-      duration,
+      duration: duration || 0, // Use provided duration or default to 0
       audioUrl,
       fileSize: fileSize || 0,
       uploadedDate: new Date().toISOString(),
