@@ -117,6 +117,7 @@ export default function AdminShiurimPage() {
   const [uploadProgress, setUploadProgress] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string>('');
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   // Folder form state
   const [newFolderName, setNewFolderName] = useState('');
@@ -313,6 +314,45 @@ export default function AdminShiurimPage() {
     } finally {
       setFolderCreating(false);
     }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+
+    const files = Array.from(e.dataTransfer.files).filter(file => 
+      file.type.startsWith('audio/') || 
+      file.name.endsWith('.mp3') || 
+      file.name.endsWith('.m4a') || 
+      file.name.endsWith('.wav')
+    );
+
+    if (files.length > 0) {
+      // Add to existing files instead of replacing
+      setUploadFiles(prev => [...prev, ...files]);
+      if (!showUploadForm) {
+        setShowUploadForm(true);
+      }
+    } else {
+      showMessage('error', 'Please drop audio files only');
+    }
+  };
+
+  const removeFileFromQueue = (index: number) => {
+    setUploadFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleUpload = async (e: React.FormEvent) => {
@@ -846,6 +886,19 @@ export default function AdminShiurimPage() {
           </div>
         )}
 
+        {/* Global Drag Overlay */}
+        {isDraggingOver && !showUploadForm && currentPath.length > 0 && (
+          <div className="fixed inset-0 bg-primary/10 backdrop-blur-sm z-30 flex items-center justify-center pointer-events-none">
+            <div className="bg-white rounded-2xl shadow-2xl p-8 border-4 border-primary border-dashed">
+              <svg className="w-20 h-20 text-primary mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              <p className="text-2xl font-bold text-primary text-center">Drop audio files here</p>
+              <p className="text-sm text-gray-600 text-center mt-2">to add them to the upload queue</p>
+            </div>
+          </div>
+        )}
+
         {/* Toolbar */}
         <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
           {/* Breadcrumb */}
@@ -959,96 +1012,26 @@ export default function AdminShiurimPage() {
           </div>
 
           {/* Upload Controls - Only show when in a folder */}
-          {currentPath.length > 0 && (
-            <div className="flex items-center gap-2">
-              {showUploadForm ? (
-                <form onSubmit={handleUpload} className="flex items-center gap-2 flex-wrap">
-                  <input
-                    type="file"
-                    id="file-upload"
-                    accept=".mp3,.m4a,.wav,audio/*"
-                    multiple
-                    onChange={(e) => {
-                      const files = Array.from(e.target.files || []);
-                      setUploadFiles(files);
-                      // Auto-populate title from filename if single file and title is empty
-                      if (files.length === 1 && !uploadTitle) {
-                        const fileNameWithoutExt = files[0].name.replace(/\.[^/.]+$/, '');
-                        setUploadTitle(fileNameWithoutExt);
-                      } else if (files.length > 1) {
-                        // Clear title for multiple files (will use individual filenames)
-                        setUploadTitle('');
-                      }
-                    }}
-                    className="hidden"
-                  />
-                  <label
-                    htmlFor="file-upload"
-                    className="px-3 py-1.5 text-sm text-gray-700 bg-gray-50 hover:bg-gray-100 rounded transition-colors border border-gray-200 cursor-pointer"
-                  >
-                    {uploadFiles.length === 0 
-                      ? 'Choose Files' 
-                      : uploadFiles.length === 1 
-                        ? uploadFiles[0].name 
-                        : `${uploadFiles.length} files selected`}
-                  </label>
-                  {uploadFiles.length === 1 && (
-                    <input
-                      type="text"
-                      value={uploadTitle}
-                      onChange={(e) => setUploadTitle(e.target.value)}
-                      className="px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent w-48"
-                      placeholder="Shiur title (optional)"
-                    />
-                  )}
-                  <input
-                    type="date"
-                    value={uploadDate}
-                    onChange={(e) => setUploadDate(e.target.value)}
-                    className="px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                  {uploadProgress && uploadStatus && (
-                    <span className="text-xs text-gray-600">{uploadStatus}</span>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={uploadProgress || uploadFiles.length === 0}
-                    className="px-3 py-1.5 text-sm bg-primary text-white rounded hover:bg-primary-dark transition-colors disabled:opacity-50"
-                  >
-                    {uploadProgress ? 'Uploading...' : 'Upload'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowUploadForm(false);
-                      setUploadFiles([]);
-                      setUploadTitle('');
-                      setUploadStatus('');
-                      const fileInput = document.getElementById('file-upload') as HTMLInputElement;
-                      if (fileInput) fileInput.value = '';
-                    }}
-                    className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </form>
-              ) : (
-                <button
-                  onClick={() => setShowUploadForm(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-700 bg-gray-50 hover:bg-gray-100 rounded transition-colors border border-gray-200"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                  </svg>
-                  Upload Shiur
-                </button>
-              )}
-            </div>
+          {currentPath.length > 0 && !showUploadForm && (
+            <button
+              onClick={() => setShowUploadForm(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-700 bg-gray-50 hover:bg-gray-100 rounded transition-colors border border-gray-200"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              Upload Shiur
+            </button>
           )}
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 overflow-auto">
+        <div 
+          className="flex-1 overflow-auto"
+          onDragOver={currentPath.length > 0 ? handleDragOver : undefined}
+          onDragLeave={currentPath.length > 0 ? handleDragLeave : undefined}
+          onDrop={currentPath.length > 0 ? handleDrop : undefined}
+        >
           {allItems.length === 0 ? (
             <div className="flex items-center justify-center h-full py-20">
               <div className="text-center text-gray-500">
@@ -1377,6 +1360,187 @@ export default function AdminShiurimPage() {
             </div>
           ) : null}
         </DragOverlay>
+
+        {/* Upload Panel */}
+        {showUploadForm && currentPath.length > 0 && (
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-300 shadow-2xl z-40 max-h-[50vh] flex flex-col">
+            {/* Upload Panel Header */}
+            <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 bg-gray-50">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <h3 className="font-semibold text-gray-800">Upload Shiurim</h3>
+                <span className="text-sm text-gray-500">
+                  ({uploadFiles.length} file{uploadFiles.length !== 1 ? 's' : ''} ready)
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setShowUploadForm(false);
+                  setUploadFiles([]);
+                  setUploadTitle('');
+                  setUploadStatus('');
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Drop Zone and File List */}
+            <div className="flex-1 overflow-auto p-6">
+              <div className="max-w-6xl mx-auto">
+                {/* Drop Zone */}
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`relative border-2 border-dashed rounded-lg p-8 mb-4 transition-all ${
+                    isDraggingOver
+                      ? 'border-primary bg-primary/5 scale-[1.02]'
+                      : 'border-gray-300 bg-gray-50 hover:border-primary/50 hover:bg-primary/5'
+                  }`}
+                >
+                  <input
+                    type="file"
+                    id="file-upload-input"
+                    accept=".mp3,.m4a,.wav,audio/*"
+                    multiple
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      if (files.length > 0) {
+                        setUploadFiles(prev => [...prev, ...files]);
+                      }
+                    }}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="file-upload-input"
+                    className="flex flex-col items-center justify-center cursor-pointer"
+                  >
+                    <svg
+                      className={`w-12 h-12 mb-3 transition-colors ${
+                        isDraggingOver ? 'text-primary' : 'text-gray-400'
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                      />
+                    </svg>
+                    <p className="text-lg font-medium text-gray-700 mb-1">
+                      {isDraggingOver ? 'Drop files here' : 'Drag & drop audio files here'}
+                    </p>
+                    <p className="text-sm text-gray-500">or click to browse</p>
+                    <p className="text-xs text-gray-400 mt-2">Supports MP3, M4A, WAV files</p>
+                  </label>
+                </div>
+
+                {/* File List */}
+                {uploadFiles.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Queued Files:</h4>
+                    <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100 max-h-[200px] overflow-y-auto">
+                      {uploadFiles.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <svg className="w-5 h-5 text-purple-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
+                            </svg>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
+                              <p className="text-xs text-gray-500">
+                                {(file.size / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => removeFileFromQueue(index)}
+                            disabled={uploadProgress}
+                            className="ml-4 text-red-500 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Remove file"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Upload Panel Footer */}
+            <form onSubmit={handleUpload} className="border-t border-gray-200 bg-gray-50 px-6 py-4">
+              <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Recording Date</label>
+                    <input
+                      type="date"
+                      value={uploadDate}
+                      onChange={(e) => setUploadDate(e.target.value)}
+                      className="px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
+                    />
+                  </div>
+                  {uploadFiles.length === 1 && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Custom Title (optional)</label>
+                      <input
+                        type="text"
+                        value={uploadTitle}
+                        onChange={(e) => setUploadTitle(e.target.value)}
+                        className="px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent w-64"
+                        placeholder="Leave blank to use filename"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  {uploadProgress && uploadStatus && (
+                    <span className="text-sm text-gray-600">{uploadStatus}</span>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={uploadProgress || uploadFiles.length === 0}
+                    className="px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {uploadProgress ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        Upload {uploadFiles.length} File{uploadFiles.length !== 1 ? 's' : ''}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
     </DndContext>
   );
