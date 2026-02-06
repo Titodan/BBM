@@ -19,6 +19,7 @@
     "@stripe/stripe-js": "^8.7.0",
     "@types/bcryptjs": "^2.4.6",
     "bcryptjs": "^3.0.3",
+    "kosher-zmanim": "^0.9.0",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
