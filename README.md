@@ -99,11 +99,12 @@ btz/
 
 ### Brand Colors
 
-- **Primary**: `#1a3d4f` - Deep teal/dark blue
-- **Primary Dark**: `#0f2027` - Darker blue
+- **Primary**: `#284451` - Deep teal/dark blue from logo
+- **Primary Dark**: `#1a3d4f` - Darker blue
 - **Secondary**: `#4a90e2` - Bright blue
-- **Accent**: `#3dd8a7` - Mint green
+- **Accent**: `#FFB800` - Gold/yellow accent
 - **Light**: `#f8fafb` - Light background
+- **Dark**: `#0f2027` - Dark background
 
 ### Typography
 
@@ -175,9 +176,11 @@ Brand colors are configured in `app/globals.css` using the new Tailwind v4 CSS-f
 
 ```css
 @theme inline {
-  --color-primary: #1a3d4f;
+  --color-primary: #284451;
+  --color-primary-dark: #1a3d4f;
   --color-secondary: #4a90e2;
-  --color-accent: #3dd8a7;
+  --color-accent: #FFB800;
+  --color-light: #f8fafb;
   /* ... */
 }
 ```
