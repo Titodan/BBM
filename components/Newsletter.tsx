@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import FadeInWhenVisible from './FadeInWhenVisible';
+import { motion } from 'framer-motion';
 
 export default function Newsletter() {
   const [email, setEmail] = useState('');
@@ -28,7 +30,8 @@ export default function Newsletter() {
 
   return (
     <section className="py-16 md:py-24">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <FadeInWhenVisible>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         {/* Icon */}
         <div className="mb-6">
           <svg
@@ -64,13 +67,15 @@ export default function Newsletter() {
               disabled={status === 'loading'}
               className="flex-1 px-6 py-4 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50"
             />
-            <button
+            <motion.button
               type="submit"
               disabled={status === 'loading'}
               className="bg-accent text-primary-dark px-8 py-4 rounded-lg font-bold hover:bg-accent/90 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               {status === 'loading' ? 'Subscribing...' : 'Subscribe'}
-            </button>
+            </motion.button>
           </div>
 
           {/* Status Message */}
@@ -91,7 +96,8 @@ export default function Newsletter() {
         <p className="text-sm text-white/70 mt-6">
           We respect your privacy. Unsubscribe at any time.
         </p>
-      </div>
+        </div>
+      </FadeInWhenVisible>
     </section>
   );
 }

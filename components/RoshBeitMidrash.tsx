@@ -1,5 +1,9 @@
+'use client';
+
 import Image from 'next/image';
 import { rabbis } from '@/data/rabbis';
+import FadeInWhenVisible from './FadeInWhenVisible';
+import { motion } from 'framer-motion';
 
 export default function RoshBeitMidrash() {
   const roshBeitMidrash = rabbis.find(r => r.isRosh);
@@ -10,14 +14,21 @@ export default function RoshBeitMidrash() {
     <section id="rosh-beit-midrash" className="py-16 md:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center mb-12 md:mb-16">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
-            ראש בית מדרש
-          </h2>
-        </div>
+        <FadeInWhenVisible>
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
+              ראש בית מדרש
+            </h2>
+          </div>
+        </FadeInWhenVisible>
 
         {/* Featured Rabbi Card */}
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-5xl mx-auto">
+        <FadeInWhenVisible delay={0.2}>
+          <motion.div 
+            className="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-5xl mx-auto"
+            whileHover={{ y: -5 }}
+            transition={{ duration: 0.3 }}
+          >
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-0">
             {/* Photo Section */}
             <div className="lg:col-span-2 bg-gradient-to-br from-secondary/10 to-accent/10 flex items-center justify-center p-8 lg:p-12">
@@ -27,7 +38,7 @@ export default function RoshBeitMidrash() {
                     src={roshBeitMidrash.photo}
                     alt={roshBeitMidrash.name}
                     fill
-                    className="object-cover object-top"
+                    className="object-cover object-top transition-transform duration-500 hover:scale-105"
                   />
                 ) : (
                   <div className="text-center">
@@ -76,9 +87,11 @@ export default function RoshBeitMidrash() {
               {/* Contact */}
               {roshBeitMidrash.email && (
                 <div className="pt-6 border-t border-gray-200">
-                  <a
+                  <motion.a
                     href={`mailto:${roshBeitMidrash.email}`}
                     className="inline-flex items-center gap-2 text-secondary hover:text-primary transition-colors font-medium"
+                    whileHover={{ x: 5 }}
+                    transition={{ duration: 0.2 }}
                   >
                     <svg
                       className="w-5 h-5"
@@ -92,12 +105,13 @@ export default function RoshBeitMidrash() {
                       <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                     {roshBeitMidrash.email}
-                  </a>
+                  </motion.a>
                 </div>
               )}
             </div>
           </div>
-        </div>
+          </motion.div>
+        </FadeInWhenVisible>
       </div>
     </section>
   );

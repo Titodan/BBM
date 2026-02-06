@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import FadeInWhenVisible from './FadeInWhenVisible';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -7,9 +10,10 @@ export default function Footer() {
     <footer id="contact" className="bg-white text-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-12">
-          {/* About Column */}
-          <div className="lg:col-span-2">
+        <FadeInWhenVisible>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-12">
+            {/* About Column */}
+            <div className="lg:col-span-2">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center">
                 <img 
@@ -35,7 +39,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/"
-                  className="text-gray-700 hover:text-accent transition-colors"
+                  className="text-gray-700 hover:text-accent transition-all duration-300 hover:translate-x-1 inline-block"
                 >
                   Home
                 </Link>
@@ -43,7 +47,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/shiurim"
-                  className="text-gray-700 hover:text-accent transition-colors"
+                  className="text-gray-700 hover:text-accent transition-all duration-300 hover:translate-x-1 inline-block"
                 >
                   Shiurim
                 </Link>
@@ -51,7 +55,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/#schedule"
-                  className="text-gray-700 hover:text-accent transition-colors"
+                  className="text-gray-700 hover:text-accent transition-all duration-300 hover:translate-x-1 inline-block"
                 >
                   Schedule
                 </Link>
@@ -59,7 +63,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/#rosh-beit-midrash"
-                  className="text-gray-700 hover:text-accent transition-colors"
+                  className="text-gray-700 hover:text-accent transition-all duration-300 hover:translate-x-1 inline-block"
                 >
                   Rabbanim
                 </Link>
@@ -137,17 +141,20 @@ export default function Footer() {
                 </div>
               </li>
             </ul>
+            </div>
           </div>
-        </div>
+        </FadeInWhenVisible>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t-4 border-primary">
+        <FadeInWhenVisible delay={0.2}>
+          <div className="pt-8 border-t-4 border-primary">
           <div className="flex flex-col md:flex-row justify-center items-center gap-4">
             <p className="text-gray-600 text-sm text-center md:text-left">
               © {currentYear} Brampton בית מדרש
             </p>
           </div>
-        </div>
+          </div>
+        </FadeInWhenVisible>
       </div>
     </footer>
   );

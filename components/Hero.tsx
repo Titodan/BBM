@@ -1,5 +1,8 @@
+'use client';
+
 import Link from 'next/link';
 import { statistics } from '@/data/rabbis';
+import { motion } from 'framer-motion';
 
 export default function Hero() {
   return (
@@ -20,7 +23,12 @@ export default function Hero() {
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 md:py-12 lg:py-16 text-center">
         {/* Logo */}
-        <div className="mb-2 sm:mb-4 md:mb-6 lg:mb-8 flex justify-center">
+        <motion.div 
+          className="mb-2 sm:mb-4 md:mb-6 lg:mb-8 flex justify-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        >
           <div className="w-40 sm:w-48 md:w-64 lg:w-80 xl:w-96">
             <img 
               src="/bbm-logo-white.png"
@@ -28,26 +36,53 @@ export default function Hero() {
               className="w-full h-auto"
             />
           </div>
-        </div>
+        </motion.div>
 
         {/* Main Tagline */}
-        <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-bold text-white mb-1 sm:mb-2 md:mb-3 lg:mb-4 leading-tight">
+        <motion.h1 
+          className="text-xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-bold text-white mb-1 sm:mb-2 md:mb-3 lg:mb-4 leading-tight"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
           A PLACE TO GROW
-        </h1>
+        </motion.h1>
 
         {/* Bilingual Subtitle */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 md:gap-3 lg:gap-4 mb-3 sm:mb-6 md:mb-8 lg:mb-10">
+        <motion.div 
+          className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 md:gap-3 lg:gap-4 mb-3 sm:mb-6 md:mb-8 lg:mb-10"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+        >
           <p className="text-base sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-medium text-accent tracking-wide italic leading-tight">
             BE A BEN TORAH, BE MORE
           </p>
-        </div>
+        </motion.div>
 
         {/* Statistics */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6 lg:gap-8 mb-3 sm:mb-6 md:mb-8 lg:mb-10 max-w-4xl mx-auto">
+        <motion.div 
+          className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6 lg:gap-8 mb-3 sm:mb-6 md:mb-8 lg:mb-10 max-w-4xl mx-auto"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            visible: {
+              transition: {
+                staggerChildren: 0.15,
+                delayChildren: 0.8
+              }
+            }
+          }}
+        >
           {statistics.map((stat, index) => (
-            <div
+            <motion.div
               key={index}
-              className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 lg:p-8 border border-white/20 hover:bg-white/15 transition-all duration-300"
+              className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 lg:p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 cursor-default"
+              variants={{
+                hidden: { opacity: 0, y: 30 },
+                visible: { opacity: 1, y: 0 }
+              }}
+              transition={{ duration: 0.5 }}
             >
               <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-accent mb-1 leading-tight">
                 {stat.value}
@@ -55,25 +90,34 @@ export default function Hero() {
               <div className="text-[10px] sm:text-xs md:text-sm lg:text-base text-white/90 leading-tight">
                 {stat.label}
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Call-to-Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4 justify-center items-center">
-          <Link
-            href="#schedule"
-            className="bg-accent text-primary-dark px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 rounded-lg font-bold text-sm sm:text-base md:text-lg hover:bg-accent/90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 w-full sm:w-auto"
-          >
-            View Schedule
-          </Link>
-          <Link
-            href="#rabbis"
-            className="bg-white text-primary px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 rounded-lg font-bold text-sm sm:text-base md:text-lg hover:bg-white/90 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 w-full sm:w-auto border-2 border-white"
-          >
-            Meet Our Rabbis
-          </Link>
-        </div>
+        <motion.div 
+          className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4 justify-center items-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 1.4 }}
+        >
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Link
+              href="#schedule"
+              className="block bg-accent text-primary-dark px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 rounded-lg font-bold text-sm sm:text-base md:text-lg hover:bg-accent/90 transition-all duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto"
+            >
+              View Schedule
+            </Link>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Link
+              href="#rabbis"
+              className="block bg-white text-primary px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 rounded-lg font-bold text-sm sm:text-base md:text-lg hover:bg-white/90 transition-all duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto border-2 border-white"
+            >
+              Meet Our Rabbis
+            </Link>
+          </motion.div>
+        </motion.div>
       </div>
 
       {/* Scroll Indicator */}

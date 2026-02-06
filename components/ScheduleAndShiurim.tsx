@@ -4,6 +4,8 @@ import { daveningTimes } from '@/data/davening';
 import { shiurim } from '@/data/shiurim';
 import { getFridayMinchaTime, getFridayArvitTime } from '@/lib/zmanim';
 import { useMemo } from 'react';
+import FadeInWhenVisible from './FadeInWhenVisible';
+import { motion } from 'framer-motion';
 
 export default function ScheduleAndShiurim() {
   // Calculate Friday Mincha and Arvit times dynamically
@@ -41,100 +43,118 @@ export default function ScheduleAndShiurim() {
     <section id="schedule" className="py-16 md:py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center mb-12 md:mb-16">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary mb-4 tracking-tight">
-            Daily Schedule
-          </h2>
-          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto font-light">
-            Join us for davening and Torah learning throughout the day
-          </p>
-        </div>
+        <FadeInWhenVisible>
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary mb-4 tracking-tight">
+              Daily Schedule
+            </h2>
+            <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto font-light">
+              Join us for davening and Torah learning throughout the day
+            </p>
+          </div>
+        </FadeInWhenVisible>
 
         {/* Davening Times */}
         <div className="mb-16 md:mb-20">
-          <div className="text-center mb-8 md:mb-10">
-            <h3 className="text-2xl md:text-3xl font-bold text-primary mb-2">
-              Davening Times
-            </h3>
-            <div className="h-0.5 w-16 bg-accent rounded-full mx-auto mt-3"></div>
-          </div>
+          <FadeInWhenVisible delay={0.1}>
+            <div className="text-center mb-8 md:mb-10">
+              <h3 className="text-2xl md:text-3xl font-bold text-primary mb-2">
+                Davening Times
+              </h3>
+              <div className="h-0.5 w-16 bg-accent rounded-full mx-auto mt-3"></div>
+            </div>
+          </FadeInWhenVisible>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
             {updatedDaveningTimes.map((davening, index) => (
-              <div
-                key={davening.id}
-                className="group relative"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                {/* Glow effect on hover */}
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-accent to-primary rounded-2xl opacity-0 group-hover:opacity-100 blur transition duration-500"></div>
-                
-                <div className="relative bg-gradient-to-br from-primary to-primary-dark rounded-2xl shadow-xl p-6 md:p-8 border border-accent/20 hover:border-accent/60 transition-all duration-300 hover:scale-105 hover:-translate-y-1">
-                  <div className="text-center">
-                    <div className="mb-4 pb-4 border-b border-accent/30">
-                      <h4 className="text-xl md:text-2xl font-bold text-white mb-2 tracking-wide">
-                        {davening.name}
-                      </h4>
-                      <p className="text-lg md:text-xl font-semibold text-accent hebrew tracking-wider">
-                        {davening.nameHebrew}
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      {davening.times.map((time, idx) => (
-                        <div key={idx} className="bg-white/10 backdrop-blur-sm rounded-lg py-2 px-3">
-                          <p className="text-lg md:text-xl font-bold text-accent">
-                            {time}
-                          </p>
-                        </div>
-                      ))}
+              <FadeInWhenVisible key={davening.id} delay={0.2 + index * 0.1}>
+                <motion.div
+                  className="group relative h-full"
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {/* Glow effect on hover */}
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-accent to-primary rounded-2xl opacity-0 group-hover:opacity-100 blur transition duration-500"></div>
+                  
+                  <div className="relative bg-gradient-to-br from-primary to-primary-dark rounded-2xl shadow-xl p-6 md:p-8 border border-accent/20 group-hover:border-accent/60 transition-all duration-300">
+                    <div className="text-center">
+                      <div className="mb-4 pb-4 border-b border-accent/30">
+                        <h4 className="text-xl md:text-2xl font-bold text-white mb-2 tracking-wide">
+                          {davening.name}
+                        </h4>
+                        <p className="text-lg md:text-xl font-semibold text-accent hebrew tracking-wider">
+                          {davening.nameHebrew}
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        {davening.times.map((time, idx) => (
+                          <div key={idx} className="bg-white/10 backdrop-blur-sm rounded-lg py-2 px-3">
+                            <p className="text-lg md:text-xl font-bold text-accent">
+                              {time}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                </motion.div>
+              </FadeInWhenVisible>
             ))}
           </div>
         </div>
 
         {/* Morning Seder */}
         <div className="mb-16">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl md:text-3xl font-bold text-primary mb-2">
-              Morning Seder
-            </h3>
-            <div className="h-0.5 w-16 bg-accent rounded-full mx-auto mt-3"></div>
-          </div>
+          <FadeInWhenVisible delay={0.1}>
+            <div className="text-center mb-8">
+              <h3 className="text-2xl md:text-3xl font-bold text-primary mb-2">
+                Morning Seder
+              </h3>
+              <div className="h-0.5 w-16 bg-accent rounded-full mx-auto mt-3"></div>
+            </div>
+          </FadeInWhenVisible>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-7">
-            {morningShiurim.map((shiur) => (
-              <ShiurCard key={shiur.id} shiur={shiur} />
+            {morningShiurim.map((shiur, index) => (
+              <FadeInWhenVisible key={shiur.id} delay={0.15 + index * 0.05}>
+                <ShiurCard shiur={shiur} />
+              </FadeInWhenVisible>
             ))}
           </div>
         </div>
 
         {/* Night Seder */}
         <div className="mb-16">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl md:text-3xl font-bold text-primary mb-2">
-              Night Seder
-            </h3>
-            <div className="h-0.5 w-16 bg-accent rounded-full mx-auto mt-3"></div>
-          </div>
+          <FadeInWhenVisible delay={0.1}>
+            <div className="text-center mb-8">
+              <h3 className="text-2xl md:text-3xl font-bold text-primary mb-2">
+                Night Seder
+              </h3>
+              <div className="h-0.5 w-16 bg-accent rounded-full mx-auto mt-3"></div>
+            </div>
+          </FadeInWhenVisible>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-7">
-            {nightShiurim.map((shiur) => (
-              <ShiurCard key={shiur.id} shiur={shiur} />
+            {nightShiurim.map((shiur, index) => (
+              <FadeInWhenVisible key={shiur.id} delay={0.15 + index * 0.05}>
+                <ShiurCard shiur={shiur} />
+              </FadeInWhenVisible>
             ))}
           </div>
         </div>
 
         {/* Vaadim */}
         <div className="mb-8">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl md:text-3xl font-bold text-primary mb-2">
-              Vaadim
-            </h3>
-            <div className="h-0.5 w-16 bg-accent rounded-full mx-auto mt-3"></div>
-          </div>
+          <FadeInWhenVisible delay={0.1}>
+            <div className="text-center mb-8">
+              <h3 className="text-2xl md:text-3xl font-bold text-primary mb-2">
+                Vaadim
+              </h3>
+              <div className="h-0.5 w-16 bg-accent rounded-full mx-auto mt-3"></div>
+            </div>
+          </FadeInWhenVisible>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-7">
-            {specialWeekly.map((shiur) => (
-              <ShiurCard key={shiur.id} shiur={shiur} special />
+            {specialWeekly.map((shiur, index) => (
+              <FadeInWhenVisible key={shiur.id} delay={0.15 + index * 0.1}>
+                <ShiurCard shiur={shiur} special />
+              </FadeInWhenVisible>
             ))}
           </div>
         </div>
@@ -145,12 +165,16 @@ export default function ScheduleAndShiurim() {
 
 function ShiurCard({ shiur, special = false }: { shiur: any; special?: boolean }) {
   return (
-    <div className="group relative h-full">
+    <motion.div 
+      className="group relative h-full"
+      whileHover={{ scale: 1.02, y: -2 }}
+      transition={{ duration: 0.2 }}
+    >
       {/* Subtle glow effect on hover */}
       <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-accent rounded-xl opacity-0 group-hover:opacity-20 blur transition duration-300"></div>
       
       <div
-        className={`relative h-full flex flex-col bg-gradient-to-br from-primary via-primary to-primary-dark rounded-xl shadow-lg p-5 md:p-6 border-l-4 hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 ${
+        className={`relative h-full flex flex-col bg-gradient-to-br from-primary via-primary to-primary-dark rounded-xl shadow-lg p-5 md:p-6 border-l-4 group-hover:shadow-2xl transition-all duration-300 ${
           special ? 'border-accent' : 'border-accent'
         }`}
       >
@@ -200,6 +224,6 @@ function ShiurCard({ shiur, special = false }: { shiur: any; special?: boolean }
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
